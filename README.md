@@ -15,6 +15,7 @@ Do **not** confuse the repository link with a live Pages URL until the owner ena
 - Shows the same landmarks over the photo and in a second, rotatable **relative-3D point projection**.
 - Supports local JSON export of the detected points, expression coefficients and provenance.
 - Shows actionable error states for missing faces, unavailable model downloads and unsupported browsers.
+- Guards against stale inference results when photos are changed during analysis and rejects unusually large images.
 
 **Not implemented:** real monocular depth inference, depth mesh, eyelid rig, blinking, LivePortrait, full 3D head, polished package distribution. The previously generated v0.2 TypeScript foundation remains a separate ZIP artifact, **not** in this repository. We will reconcile its contracts later instead of claiming it is already checked in.
 
@@ -36,7 +37,7 @@ Current code is purposefully split between `src/contracts.js` (stable normalized
 
 - No build or npm install needed for the static site once deployed to HTTPS.
 - Run `node --test tests/*.test.mjs` if you want local offline contract checks (Node 20+).
-- CI executes those offline checks but **does not** validate real browser inference.
+- CI runs offline contract checks plus an **automated Chromium browser smoke test** that downloads the public reference portrait temporarily on the CI runner. Automated Chromium is not a substitute for actual Galaxy device testing.
 - Verify on Chrome/Edge desktop and Galaxy Android after publication.
 - MediaPipe code, WASM and model are downloaded on demand from third-party hosts. For air-gapped/offline use, we would need a separately licensed/packaged distribution.
 

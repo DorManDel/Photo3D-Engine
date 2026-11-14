@@ -6,7 +6,7 @@ const nodes = { upload: $("upload"), analyze: $("analyze"), export: $("export"),
   portrait: $("portrait"), cloud: $("cloud"), status: $("status"),
   overlay: $("landmarks"), yaw: $("yaw"), pitch: $("pitch"),
   provenance: $("provenance"), portraitEmpty: $("portrait-empty"), cloudEmpty: $("cloud-empty") };
-let image = null, objectUrl = null, result = null, busy = false;
+let image = null, objectUrl = null, result = null, busy = false, imageRequestId = 0;
 
 function status(message) { nodes.status.textContent = message; }
 function redraw() {
@@ -25,31 +25,55 @@ function resetAnalysis() {
 }
 async function setImage(file) {
   if (!file) return;
+  const requestId = ++imageRequestId;
+  // Revoke only after a successful replacement, so the currently displayed photo remains usable.
   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 12 * 1024 * 1024) {
-    status("Choose a PNG/JPEG/WebP under 12 MB.");nodes.upload.value = "";return;
+    status("Choose a PNG/JPEG/WebP under 12 MB."); nodes.upload.value = ""; return;
   }
-  if (objectUrl) URL.revokeObjectURL(objectUrl);
-  objectUrl = URL.createObjectURL(file);
-  const next = new Image();next.decoding = "async";
-  try { next.src = objectUrl;await next.decode();image = next;resetAnalysis();nodes.analyze.disabled = false;status("Portrait loaded. Click Analyze to load the real face model."); }
-  catch { image = null;resetAnalysis();nodes.analyze.disabled = true;status("Could not decode that image."); }
+  const nextUrl = URL.createObjectURL(file);
+  const next = new Image(); next.decoding = "async";
+  try {
+    next.src = nextUrl;
+    await next.decode();
+    if (requestId !== imageRequestId) { URL.revokeObjectURL(nextUrl); return; }
+    if (next.naturalWidth * next.naturalHeight > 24_000_000) {
+      throw Error("Image resolution too large (max 24 MP).");
+    }
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl = nextUrl;
+    image = next;
+    resetAnalysis();
+    nodes.analyze.disabled = busy;
+    status("Portrait loaded. Click Analyze to load the real face model.");
+  } catch (error) {
+    URL.revokeObjectURL(nextUrl);
+    if (requestId === imageRequestId) status(error.message || "Could not decode that image.");
+  }
 }
 nodes.upload.addEventListener("change", e => setImage(e.target.files?.[0]));
 nodes.analyze.addEventListener("click", async () => {
   if (!image || busy) return;
-  busy = true;nodes.analyze.disabled = true;nodes.export.disabled = true;
+  busy = true; nodes.analyze.disabled = true; nodes.export.disabled = true;
+  const analyzingImage = image, imageGeneration = imageRequestId;
+  result = null; nodes.provenance.textContent = "ANALYZING";
   status("Loading MediaPipe runtime/model (first use may be slow)…");
   try {
-    // Give status text one chance to paint before synchronous inference starts.
     await new Promise(resolve => requestAnimationFrame(resolve));
-    result = await analyzeFace(image);
+    const output = await analyzeFace(analyzingImage);
+    if (imageGeneration !== imageRequestId) {
+      status("Portrait changed during analysis. Analyze the new photo.");
+      return;
+    }
+    result = output;
     nodes.provenance.textContent = "MEDIAPIPE · REAL OUTPUT";
     nodes.export.disabled = false;
     status("Detected " + result.landmarks.length + " real landmarks. Rotate the inspector with the sliders.");
   } catch (error) {
-    result = null;nodes.provenance.textContent = "ANALYSIS FAILED";
-    status("Analysis failed: " + (error?.message || String(error)) + ". Check model downloads/browser support.");
-  } finally { busy = false;nodes.analyze.disabled = !image;redraw(); }
+    if (imageGeneration === imageRequestId) {
+      result = null; nodes.provenance.textContent = "ANALYSIS FAILED";
+      status("Analysis failed: " + (error?.message || String(error)) + ". Check model downloads/browser support.");
+    }
+  } finally { busy = false; nodes.analyze.disabled = !image; redraw(); }
 });
 nodes.export.addEventListener("click", () => {
   if (!result) return;

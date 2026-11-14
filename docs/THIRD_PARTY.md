@@ -4,7 +4,7 @@
   - Docs: https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js
   - Assets: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
   - Verify model/binary and redistribution license before bundling them into a package. No model weights committed.
-- No cloud API key or hosted inference service.
+- No cloud API key or hosted inference service. MediaPipe's published privacy notice states that model input stays on device, but SDK performance/usage metrics may be sent to Google: https://www.npmjs.com/package/@mediapipe/tasks-vision . Do not promise that *all* network traffic is absent.
 - No FaceFusion/LivePortrait or Depth Anything dependency in the currently proposed static release.
 
 A non-bundled browser app still requires a network connection to the CDN/model hosts on first analysis. Mobile bandwidth/memory/performance have not yet been measured.
