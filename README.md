@@ -4,13 +4,13 @@ A **modular, local-first portrait-analysis toolkit**. The first deployable lab i
 
 ## Run without npm or a personal server
 
-After the owner reviews and merges the feature PR, enable **GitHub Pages → Deploy from a branch → main → /(root)**. Open `https://dormandel.github.io/Photo3D-Engine/`. Browsers load the static HTML and the pinned MediaPipe runtime/model from Google's distribution/CDN. No CLI, npm, or Python backend is required **for this milestone**.
+**Live beta:** https://dormandel.github.io/Photo3D-Engine/ — already deployed via GitHub Pages from `main`. Browser and model inference checks passed against the hosted URL. No CLI, npm, or Python backend is needed to use this pilot.
 
-Do **not** confuse the repository link with a live Pages URL until the owner enables Pages and verifies deployment.
+Open the site, click **Use portfolio sample** to load the reference image directly from the owner's public portfolio, then **Analyze face**. You can also choose any local PNG/JPEG/WebP. The pinned MediaPipe model is downloaded on explicit analysis; the phone's first run requires network access.
 
 ## What this experimental release really does
 
-- Imports a portrait **locally**; no upload endpoint.
+- Imports a portrait **locally**; no upload endpoint. Optional one-click sample fetched from the existing public portfolio GitHub image, without bundling its bytes.
 - On explicit click, loads MediaPipe Face Landmarker and detects facial landmarks in the image.
 - Shows the same landmarks over the photo and in a second, rotatable **relative-3D point projection**.
 - Supports local JSON export of the detected points, expression coefficients and provenance.
