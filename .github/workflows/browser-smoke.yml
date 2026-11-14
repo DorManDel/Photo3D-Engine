@@ -1,0 +1,31 @@
+name: Browser inference smoke (Chromium)
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  real-model-browser-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependency (CI only)
+        run: npm install --no-package-lock --ignore-scripts
+      - name: Install Chromium and runner libraries
+        run: npx playwright install --with-deps chromium
+      - name: Download public portfolio reference for ephemeral test
+        run: curl --fail --location --silent --show-error --retry 3 "https://raw.githubusercontent.com/DorManDel/Dor-s-Profile-Site/main/images/profile_pic.jpg" -o /tmp/photo3d-reference.jpg
+      - name: Start a static test server
+        run: python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/photo3d-server.log 2>&1 &
+      - name: Test real model inference and export
+        run: node --test tests/browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: photo3d-browser-smoke
+          path: test-results/*.png
+          if-no-files-found: ignore
