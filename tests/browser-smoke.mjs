@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 
 // Browser end-to-end test against the user's already-public portfolio portrait.
 // Fixture downloaded at CI runtime, never committed or uploaded as an artifact.
-test("MediaPipe analyzes a real portrait and both panels share source output", async () => {
+test("MediaPipe analyzes a real portrait and both panels share source output", { timeout: 180_000 }, async () => {
   await mkdir("test-results", { recursive: true });
   const browser = await chromium.launch({ headless: true, args: ["--disable-dev-shm-usage"] });
   try {
@@ -18,11 +18,11 @@ test("MediaPipe analyzes a real portrait and both panels share source output", a
     const buffer = await readFile("/tmp/photo3d-reference.jpg");
     await page.locator("#upload").setInputFiles({ name: "profile.jpg", mimeType: "image/jpeg", buffer });
     await page.getByRole("button", { name: "Analyze face" }).click();
-    await page.locator("#status").getByText(/Detected [0-9]+ real landmarks/).waitFor({ state: "visible" });
+    await page.waitForFunction(() => /Detected [0-9]+ real landmarks/.test(document.querySelector("#status")?.textContent || ""));
     assert.equal(await page.locator("#provenance").textContent(), "MEDIAPIPE · REAL OUTPUT");
     assert.equal(await page.locator("#portrait-empty").isVisible(), false);
     assert.equal(await page.locator("#cloud-empty").isVisible(), false);
-    await page.locator("#yaw").fill("45");
+    await page.locator("#yaw").evaluate(el => { el.value = "45"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await page.screenshot({ path: "test-results/desktop.png", fullPage: true });
 
     const downloadPromise = page.waitForEvent("download");
@@ -40,4 +40,4 @@ test("MediaPipe analyzes a real portrait and both panels share source output", a
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), "No horizontal overflow on phone width");
     await page.screenshot({ path: "test-results/mobile-viewport.png", fullPage: true });
   } finally { await browser.close(); }
-}, { timeout: 180_000 });
+});
