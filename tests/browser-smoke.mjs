@@ -13,7 +13,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
     page.setDefaultTimeout(120_000);
     const browserErrors = [];
     page.on("pageerror", error => browserErrors.push(error.message));
-    await page.goto("http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
+    await page.goto(process.env.PHOTO3D_BASE_URL || "http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
     assert.match(await page.title(), /Photo3D Lab/);
     const buffer = await readFile("/tmp/photo3d-reference.jpg");
     await page.locator("#upload").setInputFiles({ name: "profile.jpg", mimeType: "image/jpeg", buffer });
