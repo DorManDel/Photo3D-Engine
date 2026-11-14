@@ -1,0 +1,40 @@
+name: Photo3D deployed-site smoke
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  hosted-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify Pages serves the actual lab and JavaScript
+        run: |
+          curl --fail --location --retry 6 --retry-delay 3 --silent --show-error https://dormandel.github.io/Photo3D-Engine/ -o /tmp/photo3d-site.html
+          grep -q 'Photo3D Lab' /tmp/photo3d-site.html
+          grep -q 'src/app.js' /tmp/photo3d-site.html
+          curl --fail --location --retry 6 --retry-delay 3 --silent --show-error https://dormandel.github.io/Photo3D-Engine/src/app.js -o /tmp/photo3d-live-app.js
+          grep -q 'analyzeFace' /tmp/photo3d-live-app.js
+      - name: Install browser test dependency (CI only)
+        run: npm install --no-package-lock --ignore-scripts
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Download public test portrait (temporary)
+        run: curl --fail --location --retry 3 --silent --show-error https://raw.githubusercontent.com/DorManDel/Dor-s-Profile-Site/main/images/profile_pic.jpg -o /tmp/photo3d-reference.jpg
+      - name: Run real MediaPipe inference against deployed site
+        env:
+          PHOTO3D_BASE_URL: https://dormandel.github.io/Photo3D-Engine/
+        run: node --test tests/browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployed-site-screenshots
+          path: test-results/*.png
+          if-no-files-found: ignore
