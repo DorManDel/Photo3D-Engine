@@ -10,7 +10,7 @@ Do **not** confuse the repository link with a live Pages URL until the owner ena
 
 ## What this experimental release really does
 
-- Imports a portrait **locally**; no upload endpoint.
+- Imports a portrait **locally**; no upload endpoint. Optional one-click sample fetched from the existing public portfolio GitHub image, without bundling its bytes.
 - On explicit click, loads MediaPipe Face Landmarker and detects facial landmarks in the image.
 - Shows the same landmarks over the photo and in a second, rotatable **relative-3D point projection**.
 - Supports local JSON export of the detected points, expression coefficients and provenance.

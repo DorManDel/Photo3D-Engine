@@ -2,7 +2,7 @@ import { analyzeFace } from "./models/mediapipe.js";
 import { paintPortrait, paintLandmarks } from "./visualization.js";
 
 const $ = id => document.getElementById(id);
-const nodes = { upload: $("upload"), analyze: $("analyze"), export: $("export"),
+const nodes = { upload: $("upload"), sample: $("sample"), analyze: $("analyze"), export: $("export"),
   portrait: $("portrait"), cloud: $("cloud"), status: $("status"),
   overlay: $("landmarks"), yaw: $("yaw"), pitch: $("pitch"),
   provenance: $("provenance"), portraitEmpty: $("portrait-empty"), cloudEmpty: $("cloud-empty") };
@@ -50,6 +50,23 @@ async function setImage(file) {
     if (requestId === imageRequestId) status(error.message || "Could not decode that image.");
   }
 }
+// Optional quick-start image from user's public portfolio, never bundled or cached by this app.
+const PUBLIC_SAMPLE = "https://raw.githubusercontent.com/DorManDel/Dor-s-Profile-Site/main/images/profile_pic.jpg";
+nodes.sample.addEventListener("click", async () => {
+  nodes.sample.disabled = true;
+  const requested = ++imageRequestId; // invalidate work on an earlier selection
+  status("Loading public portfolio sample…");
+  try {
+    const response = await fetch(PUBLIC_SAMPLE, { mode: "cors", cache: "no-store" });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const photoBlob = await response.blob();
+    if (requested !== imageRequestId) return;
+    const sampleFile = new File([photoBlob], "portfolio-sample.jpg", { type: "image/jpeg" });
+    await setImage(sampleFile);
+  } catch (error) {
+    if (requested === imageRequestId) status("Could not load portfolio sample (" + error.message + "). Upload a local photo instead.");
+  } finally { nodes.sample.disabled = false; }
+});
 nodes.upload.addEventListener("change", e => setImage(e.target.files?.[0]));
 nodes.analyze.addEventListener("click", async () => {
   if (!image || busy) return;

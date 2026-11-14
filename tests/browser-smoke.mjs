@@ -16,6 +16,16 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
     await page.goto(process.env.PHOTO3D_BASE_URL || "http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
     assert.match(await page.title(), /Photo3D Lab/);
     const buffer = await readFile("/tmp/photo3d-reference.jpg");
+    const sample = page.locator("#sample");
+    // Remote PR tests may run against the currently deployed earlier revision.
+    if (await sample.count()) {
+      await sample.click();
+      await page.waitForFunction(() => /Portrait loaded/.test(document.querySelector("#status")?.textContent || ""));
+      assert.equal(await page.locator("#portrait-empty").isVisible(), false);
+    } else {
+      assert.ok(process.env.PHOTO3D_BASE_URL, "Sample button must be present in local dev branch");
+    }
+    // Also verify the local upload route independent of the sample-fetch route.
     await page.locator("#upload").setInputFiles({ name: "profile.jpg", mimeType: "image/jpeg", buffer });
     await page.getByRole("button", { name: "Analyze face" }).click();
     await page.waitForFunction(() => /Detected [0-9]+ real landmarks/.test(document.querySelector("#status")?.textContent || ""));
