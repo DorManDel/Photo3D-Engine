@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0e1020">
+  <meta name="description" content="Photo3D Lab: real face-landmark analysis and an honest relative-3D inspector.">
+  <title>Photo3D Lab • Landmark Research</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="header">
+      <div><p class="eyebrow">WEBFORGE · PHOTO3D ENGINE / PREVIEW</p>
+      <h1>Photo3D <span>Lab</span></h1>
+      <p class="intro">Actual face landmarks, two synchronized views. No fake depth geometry.</p></div>
+      <a class="link" href="https://github.com/DorManDel/Photo3D-Engine" target="_blank" rel="noopener noreferrer">Source ↗</a>
+    </header>
+
+    <section class="toolbar" aria-label="Portrait controls">
+      <label class="file"><span>Choose a portrait</span><input type="file" id="upload" accept="image/png,image/jpeg,image/webp" aria-describedby="privacy"></label>
+      <button id="analyze" type="button" disabled>Analyze face</button>
+      <button id="export" type="button" disabled>Export landmarks JSON</button>
+      <p id="privacy" class="hint">Your photo stays on this device. Analysis loads a model from a third-party CDN only after you click Analyze.</p>
+      <p id="status" role="status" aria-live="polite">Choose an image to begin.</p>
+    </section>
+
+    <div class="workbench">
+      <section class="panel" aria-labelledby="portrait-heading">
+        <header class="panel-head"><div><p class="eyebrow">01 / INPUT + FEATURES</p><h2 id="portrait-heading">Portrait</h2></div><label class="toggle"><input id="landmarks" type="checkbox" checked> Landmark overlay</label></header>
+        <div class="stage"><canvas id="portrait" width="640" height="480" role="img" aria-label="Imported portrait with optional detected facial landmarks"></canvas><div id="portrait-empty" class="empty">Upload an image to display your portrait.</div></div>
+        <p class="caption">Overlay displays <strong>detected image coordinates</strong>, not painted-on effects.</p>
+      </section>
+      <section class="panel" aria-labelledby="inspect-heading">
+        <header class="panel-head"><div><p class="eyebrow">02 / GEOMETRY INSPECTOR</p><h2 id="inspect-heading">Landmark point view</h2></div><span class="pill" id="provenance">NO MODEL OUTPUT</span></header>
+        <div class="stage points"><canvas id="cloud" width="640" height="480" role="img" aria-label="Rotatable relative 3D projection of detected facial landmarks"></canvas><div id="cloud-empty" class="empty">Real detected points will appear here.</div></div>
+        <div class="sliders"><label>Yaw <output id="yawValue" for="yaw">0°</output><input type="range" id="yaw" min="-70" max="70" value="0"></label>
+        <label>Pitch <output id="pitchValue" for="pitch">0°</output><input type="range" id="pitch" min="-50" max="50" value="0"></label></div>
+        <p class="caption">Coordinates and Z are **relative landmark estimates**. This view is <strong>not</strong> a reconstructed head or metric depth map.</p>
+      </section>
+    </div>
+    <section class="disclosure" aria-label="Technical boundaries">
+      <strong>What's real?</strong> MediaPipe model output, coordinates, blendshape coefficients. <strong>What's not here yet?</strong> Depth Anything, Three.js mesh, eyelid rig or AI-driven blinking.
+      <p>Model assets are downloaded on first analysis. Device speed, browser support and network access affect success. We never quietly substitute a simulated result.</p>
+    </section>
+    <footer><a href="https://dormandel.github.io/MobiLab/" target="_blank" rel="noopener noreferrer">← MobiLab</a> · <a href="https://github.com/DorManDel/Photo3D-Engine" target="_blank" rel="noopener noreferrer">Photo3D source</a></footer>
+  </main>
+</body>
+</html>
