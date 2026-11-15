@@ -10,3 +10,54 @@
 #cloud{touch-action:none;cursor:grab}
 #cloud:active{cursor:grabbing}
 @media(max-width:800px){.inspector-toolbar .measure{margin-left:0;flex-basis:100%}}
+
+
+/* Workspace navigation and research surfaces */
+[hidden]{display:none!important}
+.workspace-nav{display:flex;gap:.5rem;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;padding:.45rem;margin:1.25rem 0 .6rem;border:1px solid #514767;border-radius:18px;background:#181529;max-width:100%}
+.workspace-tab{flex:1 0 auto;white-space:nowrap;text-align:center;border:1px solid transparent;background:transparent;border-radius:12px;color:#c4b7dc;padding:.8rem 1.1rem}
+.workspace-tab[aria-selected="true"]{border-color:#9872ea;background:linear-gradient(130deg,#6c45bb,#4c397e);color:#fff;box-shadow:0 3px 16px #09071666}
+.workspace-tab:hover:not([aria-selected="true"]){background:#29223f}
+.workspace-page{min-width:0}
+.section-intro{margin:1.2rem 0;max-width:74ch}
+.section-intro h2{font-size:clamp(1.5rem,3vw,2rem);margin:0 0 .5rem}
+.section-intro p:last-child{color:#c8bfdc;line-height:1.6;margin:0}
+.module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.module-card,.milestone-card{border:1px solid #514767;border-radius:18px;background:rgba(26,24,46,.88);padding:1.15rem;min-width:0}
+.module-card h3{margin:.8rem 0 .45rem;font-size:1.14rem}
+.module-card p,.milestone-card p{color:#c8bfdc;line-height:1.55;margin:0}
+.module-state{display:inline-block;align-self:center;flex-shrink:0;color:#d8caef;border:1px solid #655783;background:#352b4b;border-radius:40px;padding:.32rem .55rem;font-size:.67rem;font-weight:800;letter-spacing:.05em}
+.module-state.shipped{color:#cfefd6;border-color:#437c5c;background:#1f3b32}
+.module-state.next{color:#f8e19c;border-color:#947e3e;background:#493a24}
+.info-strip{border-left:3px solid #e5d27c;background:#27243a;color:#d6cde9;padding:1rem;border-radius:0 13px 13px 0;margin:1rem 0;line-height:1.55}
+.lab-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start}
+.lab-panel{margin:0}
+.lab-panel h3{margin:0 0 .8rem;font-size:1.2rem}
+.lab-suite-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.lab-suite-tab{font-size:.78rem;padding:.55rem .65rem;min-height:40px;background:#29243e;border-color:#675487}
+.lab-suite-tab[aria-selected="true"]{background:#7952c9;border-color:#c2a8f9}
+.lab-control{display:flex;flex-direction:column;gap:.4rem;margin:1rem 0}
+.lab-control label{font-size:.82rem;color:#ddd5ee;font-weight:700}
+.lab-control select,.lab-control textarea{width:100%;min-width:0;background:#131426;border:1px solid #71638b;border-radius:10px;color:#f4f0ff;padding:.7rem;font:inherit}
+.lab-control select{min-height:44px}
+.lab-control textarea{resize:vertical;min-height:105px}
+.lab-case-details{border:1px solid #463b60;border-radius:13px;padding:1rem;background:#141529}
+.lab-case-details h4{margin:0 0 .5rem}
+.lab-case-details p{color:#c9bfdc;font-size:.86rem;line-height:1.6}
+.lab-case-details .criteria-note{color:#eee0a6}
+.lab-actions{display:flex;flex-wrap:wrap;gap:.6rem}
+.lab-actions button{flex:1 1 175px}
+.lab-history{margin-top:1rem}
+.lab-history h4{margin:0 0 .6rem}
+.journal-entry{padding:.7rem 0;border-top:1px solid #463b60;display:flex;flex-direction:column;gap:.25rem;overflow-wrap:anywhere}
+.journal-entry small{color:#a99bbf}
+.journal-entry p{white-space:pre-wrap;font-size:.8rem;color:#c9bfdc;margin:0}
+.milestone-list{display:grid;gap:1rem}
+.milestone-heading{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem}
+.milestone-heading h3{margin:0;flex:1 1 260px;font-size:1.12rem}
+.milestone-id{font-weight:900;font-size:.85rem;color:#f0da7f}
+.milestone-card h4{margin:1rem 0 .45rem}
+.criteria{color:#c9bfdc;line-height:1.6;margin:.25rem 0 1rem;padding-left:1.5rem}
+.milestone-card .milestone-limits{font-size:.78rem;color:#e6cb90}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #edd761;outline-offset:3px}
+@media(max-width:800px){.lab-layout,.module-grid{grid-template-columns:1fr}.workspace-nav{gap:.25rem;padding:.3rem}.workspace-tab{flex:0 0 auto;padding:.72rem .8rem;font-size:.83rem}.section-intro{margin:.9rem 0}.milestone-heading{gap:.5rem}}

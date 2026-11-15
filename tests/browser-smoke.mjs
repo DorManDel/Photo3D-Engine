@@ -55,6 +55,24 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       assert.equal(await page.locator("#zoomValue").textContent(),"1.7×");
       await page.locator("#resetView").click();
       assert.equal(await page.locator("#zoomValue").textContent(),"1.0×");
+      // Newly added workspace must remain separate from the working portrait analyzer.
+      await page.getByRole("tab", { name: "Experiment Lab" }).click();
+      assert.equal(await page.locator("#experiment-lab").isVisible(), true);
+      await page.screenshot({path:"test-results/experiment-lab-desktop.png",fullPage:true});
+      assert.equal(await page.locator("#portrait-lab").isVisible(), false);
+      await page.locator("#lab-case").selectOption("mobile-orbit");
+      await page.locator("#lab-result").selectOption("blocked");
+      await page.locator("#lab-notes").fill("Automated UI test only; no physical-phone claim.");
+      await page.locator("#lab-save").click();
+      assert.match(await page.locator("#lab-feedback").textContent(), /Saved locally/);
+      await page.reload();
+      await page.getByRole("tab", { name: "Experiment Lab" }).click();
+      assert.match(await page.locator("#lab-history").textContent(), /Automated UI test only/);
+      await page.getByRole("tab", { name: "Roadmap" }).click();
+      assert.equal(await page.locator(".milestone-card").count(), 7);
+      await page.screenshot({path:"test-results/roadmap-desktop.png",fullPage:true});
+      await page.getByRole("tab", { name: "Portrait Lab" }).click();
+      assert.equal(await page.locator("#portrait-lab").isVisible(), true);
     }
 
     assert.deepEqual(browserErrors, []);
@@ -62,5 +80,10 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), "No horizontal overflow on phone width");
     await page.screenshot({ path: "test-results/mobile-viewport.png", fullPage: true });
+    if (!process.env.PHOTO3D_BASE_URL) {
+      await page.getByRole("tab", { name: "Experiment Lab" }).click();
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), "Experiment Lab must not overflow mobile width");
+      await page.screenshot({ path: "test-results/experiment-lab-mobile.png", fullPage: true });
+    }
   } finally { await browser.close(); }
 });

@@ -8,6 +8,12 @@ A **modular, local-first portrait-analysis toolkit**. The first deployable lab i
 
 Open the site, click **Use portfolio sample** to load the reference image directly from the owner's public portfolio, then **Analyze face**. You can also choose any local PNG/JPEG/WebP. The pinned MediaPipe model is downloaded on explicit analysis; the phone's first run requires network access.
 
+## Workspace expansion (review branch)
+
+A single-site workspace adds four **top-level tabs**: Portrait Lab (existing real inference), Avatar Studio (clearly marked planned), Experiment Lab (nested test categories, manual localStorage journal and JSON export), and Roadmap (M0–M6 acceptance criteria). The workbench does not claim that avatar capture, 3D reconstruction or export already exists. See [engineering roadmap](docs/ROADMAP.md).
+
+The manual test journal records **user-entered outcomes**, not automatically measured accuracy, and keeps them in the current browser until explicitly exported or browser storage is cleared. Do not enter sensitive image, face or video data in notes. Private checkpoint details remain in PCM and are never loaded by the public site.
+
 ## What this experimental release really does
 
 - Imports a portrait **locally**; no upload endpoint. Optional one-click sample fetched from the existing public portfolio GitHub image, without bundling its bytes.
@@ -37,7 +43,7 @@ Current code is purposefully split between `src/contracts.js` (stable normalized
 ## Development and checks
 
 - No build or npm install needed for the static site once deployed to HTTPS.
-- Run `node --test tests/*.test.mjs` if you want local offline contract checks (Node 20+).
+- Run `node --test tests/*.test.mjs` for offline contract and workspace checks (Node 20+).
 - CI runs offline contract checks plus an **automated Chromium browser smoke test** that downloads the public reference portrait temporarily on the CI runner. Automated Chromium is not a substitute for actual Galaxy device testing.
 - Verify on Chrome/Edge desktop and Galaxy Android after publication.
 - MediaPipe code, WASM and model are downloaded on demand from third-party hosts. For air-gapped/offline use, we would need a separately licensed/packaged distribution.
