@@ -6,13 +6,14 @@ import { resolve, dirname, join } from "node:path";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const dist=join(root,"packages/face-surface/dist");
 await mkdir(dist,{recursive:true});
-for (const sourceName of ["face-triangles.js","face-topology.js"]) {
+for (const sourceName of ["face-triangles.js","face-topology.js","surface-audit.js"]) {
   const source=await readFile(join(root,"src/geometry",sourceName),"utf8");
   await writeFile(join(dist,sourceName),source);
 }
 await writeFile(join(dist,"index.js"),[
   'export { FACE_SURFACE_SCHEMA, extractOrderedTriangles, normalizeFaceTriangles, createTexturedFaceSurface } from "./face-triangles.js";',
   'export { TOPOLOGY_SCHEMA, normalizeConnections, normalizeFaceTopology, projectFace } from "./face-topology.js";',
+  'export { SURFACE_AUDIT_SCHEMA, auditFaceSurface } from "./surface-audit.js";',
   ""
 ].join("\n"));
 process.stdout.write("Built side-effect-free face-surface ESM package (no model weights).\n");
