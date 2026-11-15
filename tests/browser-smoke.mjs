@@ -11,8 +11,11 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
     page.setDefaultTimeout(120_000);
-    const browserErrors = [];
+    const browserErrors = [], failedRequests = [];
     page.on("pageerror", error => browserErrors.push(error.message));
+    page.on("console", message => {if(message.type()==="error") browserErrors.push("console: "+message.text());});
+    page.on("requestfailed", request => failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"failed")));
+    page.on("response", response => {if(response.status()>=400)failedRequests.push(response.status()+" "+response.url());});
     await page.goto(process.env.PHOTO3D_BASE_URL || "http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
     assert.match(await page.title(), /Photo3D Lab/);
     const buffer = await readFile("/tmp/photo3d-reference.jpg");
@@ -63,13 +66,25 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       const dataTopology=output.topology;
       assert.ok(dataTopology.triangles.length > 700,"Official ordered edge triplets must produce real faces");
       await page.locator("#inspectorMode").selectOption("texture");
-      await page.waitForFunction(() => {
-        const stats=document.querySelector("#meshStats")?.textContent || "";
-        const button=document.querySelector("#exportPng");
-        const message=document.querySelector("#status")?.textContent || "";
-        return /Textured mode unavailable/.test(message) ||
-          (!!document.querySelector("#mesh3d canvas") && /textured triangles/.test(stats) && button && !button.disabled);
-      },null,{timeout:45000});
+      try{
+        await page.waitForFunction(() => {
+          const stats=document.querySelector("#meshStats")?.textContent || "";
+          const button=document.querySelector("#exportPng");
+          const message=document.querySelector("#status")?.textContent || "";
+          return /Textured mode unavailable/.test(message) ||
+            (!!document.querySelector("#mesh3d canvas") && /textured triangles/.test(stats) && button && !button.disabled);
+        },null,{timeout:18000});
+      }catch(error){
+        const state=await page.evaluate(()=>({
+          mode:document.querySelector("#inspectorMode")?.value,
+          status:document.querySelector("#status")?.textContent,
+          stats:document.querySelector("#meshStats")?.textContent,
+          canvasCount:document.querySelectorAll("#mesh3d canvas").length,
+          urls:performance.getEntriesByType("resource").filter(e=>e.name.includes("three")).map(e=>e.name)
+        }));
+        console.log("TEXTURE_INIT_DIAGNOSTIC",JSON.stringify({state,failedRequests,browserErrors}));
+        throw error;
+      }
       const textureStatus=await page.locator("#status").textContent();
       assert.doesNotMatch(textureStatus,/Textured mode unavailable/,textureStatus);
       assert.equal(await page.locator("#exportPng").isEnabled(),true,
