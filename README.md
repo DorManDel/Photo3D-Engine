@@ -12,12 +12,13 @@ Open the site, click **Use portfolio sample** to load the reference image direct
 
 - Imports a portrait **locally**; no upload endpoint. Optional one-click sample fetched from the existing public portfolio GitHub image, without bundling its bytes.
 - On explicit click, loads MediaPipe Face Landmarker and detects facial landmarks in the image.
-- Shows the same landmarks over the photo and in a second, rotatable **relative-3D point projection**.
+- Shows the same landmarks over the photo and in a zoomable, drag-to-orbit **relative-3D topology inspector**. Official MediaPipe connection edges power points, wireframe and contour modes.
+- Centers the inspector on the detected face rather than the image center, and can overlay the official tessellation on the photo.
 - Supports local JSON export of the detected points, expression coefficients and provenance.
 - Shows actionable error states for missing faces, unavailable model downloads and unsupported browsers.
 - Guards against stale inference results when photos are changed during analysis and rejects unusually large images.
 
-**Not implemented:** real monocular depth inference, depth mesh, eyelid rig, blinking, LivePortrait, full 3D head, polished package distribution. The previously generated v0.2 TypeScript foundation remains a separate ZIP artifact, **not** in this repository. We will reconcile its contracts later instead of claiming it is already checked in.
+**Not implemented:** real monocular depth inference, dense/textured head mesh, eyelid rig, blinking, LivePortrait, full 3D head, polished package distribution. MediaPipe topology makes a relative face surface preview, not true calibrated 3D. The previously generated v0.2 TypeScript foundation remains a separate ZIP artifact, **not** in this repository. We will reconcile its contracts later instead of claiming it is already checked in.
 
 ## Package direction (not all implemented)
 

@@ -44,6 +44,19 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
     assert.ok(output.landmarks.length >= 468, "Expected model-produced facial landmarks");
     assert.ok(output.landmarks.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)));
     assert.equal(output.provenance.inference, "on-device");
+    if(!process.env.PHOTO3D_BASE_URL){
+      assert.equal(output.topology.source,"mediapipe-face-landmarker@0.10.35");
+      assert.ok(output.topology.tessellation.length > 1000,"Official MediaPipe mesh edges must be included");
+      assert.ok(output.topology.contours.length > 0,"Official contour edges must be included");
+      await page.locator("#inspectorMode").selectOption("contours");
+      await page.locator("#zoom").evaluate(el=>{el.value="1.7";el.dispatchEvent(new Event("input",{bubbles:true}));});
+      await page.locator("#portraitMesh").check();
+      assert.match(await page.locator("#meshStats").textContent(),/official edges/);
+      assert.equal(await page.locator("#zoomValue").textContent(),"1.7×");
+      await page.locator("#resetView").click();
+      assert.equal(await page.locator("#zoomValue").textContent(),"1.0×");
+    }
+
     assert.deepEqual(browserErrors, []);
     
     await page.setViewportSize({ width: 390, height: 844 });

@@ -29,20 +29,23 @@
 
     <div class="workbench">
       <section class="panel" aria-labelledby="portrait-heading">
-        <header class="panel-head"><div><p class="eyebrow">01 / INPUT + FEATURES</p><h2 id="portrait-heading">Portrait</h2></div><label class="toggle"><input id="landmarks" type="checkbox" checked> Landmark overlay</label></header>
+        <header class="panel-head"><div><p class="eyebrow">01 / INPUT + FEATURES</p><h2 id="portrait-heading">Portrait</h2></div><div class="panel-controls"><label class="toggle"><input id="landmarks" type="checkbox" checked> Landmarks</label><label class="toggle"><input id="portraitMesh" type="checkbox"> Mesh overlay</label></div></header>
         <div class="stage"><canvas id="portrait" width="640" height="480" role="img" aria-label="Imported portrait with optional detected facial landmarks"></canvas><div id="portrait-empty" class="empty">Upload an image to display your portrait.</div></div>
-        <p class="caption">Overlay displays <strong>detected image coordinates</strong>, not painted-on effects.</p>
+        <p class="caption">Overlay connects real detected points using the official MediaPipe face topology, without inventing facial geometry.</p>
       </section>
       <section class="panel" aria-labelledby="inspect-heading">
         <header class="panel-head"><div><p class="eyebrow">02 / GEOMETRY INSPECTOR</p><h2 id="inspect-heading">Landmark point view</h2></div><span class="pill" id="provenance">NO MODEL OUTPUT</span></header>
-        <div class="stage points"><canvas id="cloud" width="640" height="480" role="img" aria-label="Rotatable relative 3D projection of detected facial landmarks"></canvas><div id="cloud-empty" class="empty">Real detected points will appear here.</div></div>
+        <div class="inspector-toolbar"><label for="inspectorMode">Display <select id="inspectorMode"><option value="wireframe">Wireframe</option><option value="points">Points</option><option value="contours">Contours</option></select></label><button type="button" class="secondary" id="resetView">Reset view</button><span id="meshStats" class="measure">Analyze to inspect mesh</span></div>
+        <div class="stage points"><canvas id="cloud" width="640" height="480" role="img" aria-label="Drag to orbit MediaPipe's relative face topology"></canvas><div id="cloud-empty" class="empty">Real detected points will appear here.</div></div>
+        <p class="drag-hint">Drag with one finger or mouse to orbit · Face automatically centered</p>
         <div class="sliders"><label>Yaw <output id="yawValue" for="yaw">0°</output><input type="range" id="yaw" min="-70" max="70" value="0"></label>
-        <label>Pitch <output id="pitchValue" for="pitch">0°</output><input type="range" id="pitch" min="-50" max="50" value="0"></label></div>
-        <p class="caption">Coordinates and Z are <strong>relative landmark estimates</strong>. This view is <strong>not</strong> a reconstructed head or metric depth map.</p>
+        <label>Pitch <output id="pitchValue" for="pitch">0°</output><input type="range" id="pitch" min="-50" max="50" value="0"></label>
+        <label>Zoom <output id="zoomValue" for="zoom">1.0×</output><input type="range" id="zoom" min="0.6" max="2.2" step="0.1" value="1"></label></div>
+        <p class="caption">Real MediaPipe connections and relative landmark Z. This is a <strong>front-face topology preview</strong>, not calibrated depth, a complete head or a realistic facial animation.</p>
       </section>
     </div>
     <section class="disclosure" aria-label="Technical boundaries">
-      <strong>What's real?</strong> MediaPipe model output, coordinates, blendshape coefficients. <strong>What's not here yet?</strong> Depth Anything, Three.js mesh, eyelid rig or AI-driven blinking.
+      <strong>What's real?</strong> Detected landmark coordinates, official MediaPipe edge connections and expression scores. <strong>What's not here yet?</strong> AI depth estimation, textured 3D reconstruction or realistic blinking.
       <p>Model assets are downloaded on first analysis. Device speed, browser support and network access affect success. We never quietly substitute a simulated result.</p>
     </section>
     <footer><a href="https://dormandel.github.io/MobiLab/" target="_blank" rel="noopener noreferrer">← MobiLab</a> · <a href="https://github.com/DorManDel/Photo3D-Engine" target="_blank" rel="noopener noreferrer">Photo3D source</a></footer>
