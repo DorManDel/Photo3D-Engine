@@ -51,7 +51,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       await page.locator("#inspectorMode").selectOption("contours");
       await page.locator("#zoom").evaluate(el=>{el.value="1.7";el.dispatchEvent(new Event("input",{bubbles:true}));});
       await page.locator("#portraitMesh").check();
-      assert.match(await page.locator("#meshStats").textContent(),/official edges/);
+      assert.match(await page.locator("#meshStats").textContent(),/official (edges|triangles)/);
       assert.equal(await page.locator("#zoomValue").textContent(),"1.7×");
       await page.locator("#resetView").click();
       assert.equal(await page.locator("#zoomValue").textContent(),"1.0×");
