@@ -7,12 +7,15 @@ import { chromium } from "playwright";
 // Fixture downloaded at CI runtime, never committed or uploaded as an artifact.
 test("MediaPipe analyzes a real portrait and both panels share source output", { timeout: 180_000 }, async () => {
   await mkdir("test-results", { recursive: true });
-  const browser = await chromium.launch({ headless: true, args: ["--disable-dev-shm-usage"] });
+  const browser = await chromium.launch({ headless: true, args: ["--disable-dev-shm-usage", "--enable-webgl", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
     page.setDefaultTimeout(120_000);
-    const browserErrors = [];
+    const browserErrors = [], failedRequests = [];
     page.on("pageerror", error => browserErrors.push(error.message));
+    page.on("console", message => {if(message.type()==="error" && !/^INFO: Created TensorFlow Lite XNNPACK delegate/.test(message.text())) browserErrors.push("console: "+message.text());});
+    page.on("requestfailed", request => failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"failed")));
+    page.on("response", response => {if(response.status()>=400)failedRequests.push(response.status()+" "+response.url());});
     await page.goto(process.env.PHOTO3D_BASE_URL || "http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
     assert.match(await page.title(), /Photo3D Lab/);
     const buffer = await readFile("/tmp/photo3d-reference.jpg");
@@ -51,10 +54,74 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       await page.locator("#inspectorMode").selectOption("contours");
       await page.locator("#zoom").evaluate(el=>{el.value="1.7";el.dispatchEvent(new Event("input",{bubbles:true}));});
       await page.locator("#portraitMesh").check();
-      assert.match(await page.locator("#meshStats").textContent(),/official edges/);
+      assert.match(await page.locator("#meshStats").textContent(),/official (edges|triangles)/);
       assert.equal(await page.locator("#zoomValue").textContent(),"1.7×");
       await page.locator("#resetView").click();
       assert.equal(await page.locator("#zoomValue").textContent(),"1.0×");
+    }
+
+    // The deployed-site PR check may still point to an earlier published revision.
+    // Local PR tests always require the v0.4 feature. Once merged, hosted checks do too.
+    if (!process.env.PHOTO3D_BASE_URL || await page.locator("#exportPng").count()) {
+      const dataTopology=output.topology;
+      assert.ok(dataTopology.triangles.length > 700,"Official ordered edge triplets must produce real faces");
+      await page.locator("#inspectorMode").selectOption("texture");
+      try{
+        await page.waitForFunction(() => {
+          const stats=document.querySelector("#meshStats")?.textContent || "";
+          const button=document.querySelector("#exportPng");
+          const message=document.querySelector("#status")?.textContent || "";
+          return /Textured mode unavailable/.test(message) ||
+            (!!document.querySelector("#mesh3d canvas") && /textured triangles/.test(stats) && button && !button.disabled);
+        },null,{timeout:18000});
+      }catch(error){
+        const state=await page.evaluate(()=>({
+          mode:document.querySelector("#inspectorMode")?.value,
+          status:document.querySelector("#status")?.textContent,
+          stats:document.querySelector("#meshStats")?.textContent,
+          canvasCount:document.querySelectorAll("#mesh3d canvas").length,
+          runtime:window.photo3dStatus?.(),
+          urls:performance.getEntriesByType("resource").filter(e=>e.name.includes("three")).map(e=>e.name)
+        }));
+        console.log("TEXTURE_INIT_DIAGNOSTIC",JSON.stringify({state,failedRequests,browserErrors}));
+        throw error;
+      }
+      const textureStatus=await page.locator("#status").textContent();
+      assert.doesNotMatch(textureStatus,/Textured mode unavailable/,textureStatus);
+      assert.equal(await page.locator("#exportPng").isEnabled(),true,
+        "Textured mesh not active; status="+textureStatus+" stats="+await page.locator("#meshStats").textContent());
+      assert.equal(await page.locator("#cloud").isVisible(),false);
+      assert.equal(await page.locator("#referenceCompare").isVisible(),true);
+      const triangles=Number((await page.locator("#meshStats").textContent()).match(/([0-9]+) textured triangles/)?.[1]);
+      assert.ok(triangles > 700,"No fake geometry fallback");
+      // Actual GPU canvas must hold real rendered pixels, not just an empty canvas.
+      const pixels=await page.locator("#mesh3d canvas").evaluate(canvas=>{
+        const copy=document.createElement("canvas");copy.width=canvas.width;copy.height=canvas.height;
+        const ctx=copy.getContext("2d");
+        ctx.drawImage(canvas,0,0);
+        const data=ctx.getImageData(0,0,copy.width,copy.height).data;
+        let lit=0;
+        for(let i=3;i<data.length;i+=4)if(data[i]>0)lit++;
+        return {lit,total:data.length/4};
+      });
+      assert.ok(pixels.lit > pixels.total*.01,"Textured mesh should occupy >1% of the GPU canvas");
+      await page.locator("#inspectorMode").selectOption("texture-wireframe");
+      await page.locator("#depth").evaluate(el=>{el.value="0";el.dispatchEvent(new Event("input",{bubbles:true}));});
+      assert.equal(await page.locator("#depthValue").textContent(),"0.0×");
+      await page.locator("#yaw").evaluate(el=>{el.value="30";el.dispatchEvent(new Event("input",{bubbles:true}));});
+      await page.locator("#mesh3d canvas").screenshot({path:"test-results/textured-face.png"});
+      await page.locator("#resetView").click();
+      assert.equal(await page.locator("#depthValue").textContent(),"1.0×");
+      const pngPromise=page.waitForEvent("download");
+      await page.getByRole("button",{name:"Save mesh PNG"}).click();
+      const png=await pngPromise;
+      const saved=await readFile(await png.path());
+      assert.ok(saved.byteLength>3000,"PNG should contain a nonempty textured preview");
+      assert.ok(saved.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),"PNG signature");
+      await page.locator("#inspectorMode").selectOption("wireframe");
+      assert.equal(await page.locator("#mesh3d").isVisible(),false);
+      await page.locator("#inspectorMode").selectOption("texture");
+      assert.equal(await page.locator("#exportPng").isEnabled(),true);
     }
 
     assert.deepEqual(browserErrors, []);

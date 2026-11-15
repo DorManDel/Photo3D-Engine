@@ -1,26 +1,51 @@
-# Photo3D — official MediaPipe topology inspector
+# Photo3D v0.4 — UV-textured MediaPipe face topology (design + implementation)
 
-## Evidence-backed source graph
+## Goal and evidence
+- Input: single original photograph + **real MediaPipe face landmarks and official tessellation edge list**.
+- New output: only the photo-visible face portion textured on indexed triangles, inspectable at different yaw/pitch/zoom and relative Z scales.
+- The left image and the right mesh share the exact normalized model output. No 3D shape is invented from a decorative blob.
 
-1. `src/models/mediapipe.js` imports the pinned Google Tasks Vision library and reads `FaceLandmarker.FACE_LANDMARKS_TESSELATION` and `FACE_LANDMARKS_CONTOURS` (documented official connectivity).
-2. `src/geometry/face-topology.js` validates/deduplicates connection edges and computes face-centered relative-Z view coordinates. This module is pure JS and independent of DOM/renderer.
-3. `src/contracts.js` keeps `photo3d.landmarks.v1`, now adding optional `topology` data identified by `photo3d.face-topology.v1` from the same real inference.
-4. `src/visualization.js` renders the original photo and inspector from this **same result**: dots, mesh overlay, official wireframe and contours, no synthesized landmarks.
-5. `src/app.js` owns UI state, touch/mouse orbit, zoom, reset and JSON export, separate from geometry logic.
-6. `tests/contracts.test.mjs` tests contracts/projection. `tests/browser-smoke.mjs` checks official topology count, different views, zoom and full browser model inference.
+## Modular source map
+```
+src/models/mediapipe.js
+    -> src/contracts.js
+      -> src/geometry/face-topology.js   (model triangle topology)
+      -> src/geometry/face-triangles.js  (validated triples, XYZ, UV, indices)
+    -> src/renderers/three-textured.js   (optional browser WebGL / PNG)
+    -> src/visualization/face-reference.js (real crop comparison)
+    -> src/app.js                       (mode, drag, pinch, exports)
+```
 
-## What this does not mean
+### Triangle validation
+The official tessellation arrives in successive directed groups `[a→b,b→c,c→a]`. We extract the three unique vertices **before** deduplicating wireframe edges; an arbitrary edge collection is *never* triangulated by guessing. Invalid/degenerate or out-of-range triangles are rejected. No fallback fabricated geometry.
 
-The mesh is connectivity of the image-visible face using MediaPipe's relative coordinates. This is **not** a depth map, reconstructed head, textured 3D mesh, physically calibrated surface or blinking rig. Hidden surfaces remain unknown. Do not advertise it otherwise.
+### Geometry / UV
+- Image-normalized `x,y` are converted into original photo pixel space (`x*width, y*height`), then recentered/scaled uniformly. **Image aspect ratio is preserved**.
+- MediaPipe's relative `z` is converted to display scale using image width. `Relative Z` only flattens/exaggerates this approximate geometry.
+- Source image is retained as the texture: vertex UV `(x,1-y)` in Three.js's bottom-up mapping convention, with `HTMLImageElement`/canvas `flipY=true`.
+- Underlying `BufferGeometry` stores indexed triangles and original UV samples. Mesh material is unlit (preserves original photograph colors). Optional overlay exposes edges for diagnosis.
+- Original reference crop is a separate display thumbnail for mobile comparison; it is **not** a fake 3D background.
+- WebGL is initialized only on demand and retains a bounded (max 1536px) source texture. There is no perpetual render loop; it redraws on interaction and resize.
 
-## Next adapters
+### Web / distribution
+- Public GitHub Pages static deployment; no user npm, Python service or API key.
+- Three.js ES module dynamically loaded from pinned jsDelivr version; model still downloaded only after Analyze.
+- The pure geometry/topology/UV functions have no Three.js or DOM dependency and are future NPM/ESM package boundaries.
+- Other renderers can consume the same normalized surface interface; do not build model inference into renderer.
+- PNG export uses the real WebGL canvas.
 
-- `depth`: vetted browser AI depth model, clearly labeled relative vs metric distance; independent provider errors/telemetry.
-- `renderer`: Three.js/WebGL consuming normalized geometry and optional depth, replaceable without changing the AI provider.
-- `animation`: separate facial rig or model-based renderer after verifying realistic blink quality and licensing.
-- `packages`: reconcile prior TypeScript v0.2 prototype and versioned interface contracts; current browser pilot is not a published NPM engine.
+### Acceptance gates
+1. Pure contract tests: official edge triplets, no guessed triangles, UV values, portrait aspect, no mutation, Z flattening and invalid input.
+2. Full Chromium: public portfolio reference → MediaPipe real model → >700 triangles → visible WebGL pixels → touch/slider modes → PNG with valid signature → 390px viewport no overflow.
+3. GitHub Pages release + published URL smoke; **physical Galaxy Samsung Browser evidence still required**, especially face/color alignment, eyes/lips/beard distortions, GPU reliability and performance.
+
+### Known visual boundaries
+- Textured face mesh covers only the model-supported facial region; no hair/head silhouette, ears, neck or background reconstruction.
+- A single photograph does not reveal skin or geometry behind the face, so yaw beyond ~40° is approximate and warned about.
+- Relative MediaPipe Z is not a calibrated depth map; geometry may stretch or fold at extreme rotations.
+- **Next**: separate depth-provider integration, segmentation/occlusion strategy, then real perspective-correct surface/animation rigs and package publishing.
 
 ## References
-
-- MediaPipe Face Landmarker API: https://developers.google.com/edge/api/mediapipe/js/tasks-vision.facelandmarker
-- Google Face Landmarker guide: https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker
+- MediaPipe tessellation source: https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/web/vision/face_landmarker/face_landmarks_connections.ts
+- Three.js geometry: https://threejs.org/docs/pages/BufferGeometry.html
+- Three.js texture: https://threejs.org/docs/pages/Texture.html
