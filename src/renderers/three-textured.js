@@ -81,11 +81,12 @@ export async function createTexturedViewer(container) {
     resize();
     return {vertices:surface.vertexCount,triangles:surface.triangleCount,textureWidth:source.width,textureHeight:source.height,depthKind:surface.geometryKind};
   }
-  function setView({yaw=0,pitch=0,zoom=1,wireframe=false}={}){
+  function setView({yaw=0,pitch=0,zoom=1,wireframe=false,depthStrength=1}={}){
     if(destroyed)return;
     group.rotation.order="YXZ";
     group.rotation.y=yaw*Math.PI/180;
     group.rotation.x=pitch*Math.PI/180;
+    group.scale.z=Math.max(0,Math.min(2,Number(depthStrength)));
     camera.zoom=Math.max(.5,Math.min(2.5,Number(zoom)||1));
     camera.updateProjectionMatrix();
     if(lines)lines.visible=Boolean(wireframe);
