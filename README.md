@@ -1,12 +1,20 @@
 # Photo3D Engine
 
-A **modular, local-first portrait-analysis toolkit**. The first deployable lab is a **real MediaPipe Face Landmarker proof of concept**, not a 3D head reconstruction or animated portrait.
+A **modular, local-first portrait-analysis toolkit**. The browser lab combines **real MediaPipe face landmarks and original-image UV texturing**. It is a diagnostic 2.5D surface, not a reconstructed head or animated portrait.
 
 ## Run without npm or a personal server
 
 **Live beta:** https://dormandel.github.io/Photo3D-Engine/ — already deployed via GitHub Pages from `main`. Browser and model inference checks passed against the hosted URL. No CLI, npm, or Python backend is needed to use this pilot.
 
 Open the site, click **Use portfolio sample** to load the reference image directly from the owner's public portfolio, then **Analyze face**. You can also choose any local PNG/JPEG/WebP. The pinned MediaPipe model is downloaded on explicit analysis; the phone's first run requires network access.
+
+## v0.4.1 — Geometry & feature diagnostics
+
+The inspector now supports **Visible surface**, **X-Ray** and **Open borders** when displaying a textured wireframe. Surface lines are depth-tested by default; X-Ray intentionally shows hidden lines. Open borders are derived from actual triangle edge usage, with counts for boundary edges/components and non-manifold edges. These are *mesh measurements*, not an automatic label for eye holes.
+
+The **Eyes + lips** toggle highlights real MediaPipe feature connection lists on the original image. It does not generate eyeballs, mouth interiors or blink animation. **Compare 0°** sets yaw/pitch to zero and relative Z to zero while enlarging the original crop for side-by-side inspection; use Reset view to restore default depth.
+
+The audit is pure JS and included in the private experimental `@webforge/photo3d-face-surface@0.4.1-dev.0` build, without model weights or any Three.js dependency. E2E checks exercise real provider regions and actual renderer depth behavior. See [Provider Roadmap](docs/PROVIDER_ROADMAP.md) before adding expensive models.
 
 ## v0.4 — Textured Face Mesh Preview
 
