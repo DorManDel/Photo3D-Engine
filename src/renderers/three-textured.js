@@ -104,7 +104,13 @@ export async function createTexturedViewer(container){
     const validStyle=["surface","xray","borders"].includes(wireStyle)?wireStyle:"surface";
     if(lines)lines.visible=Boolean(wireframe)&&validStyle!=="borders";
     if(borders)borders.visible=Boolean(wireframe)&&validStyle==="borders";
-    if(wireMaterial){wireMaterial.depthTest=validStyle!=="xray";wireMaterial.needsUpdate=true;}
+    if(wireMaterial){
+      const depthTest=validStyle!=="xray";
+      if(wireMaterial.depthTest!==depthTest){
+        wireMaterial.depthTest=depthTest;
+        wireMaterial.needsUpdate=true;
+      }
+    }
     draw();
   }
   function diagnostics(){
