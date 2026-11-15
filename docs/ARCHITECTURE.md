@@ -1,21 +1,26 @@
-# Architecture evidence — Photo3D static pilot
+# Photo3D — official MediaPipe topology inspector
 
-## Source-to-flow
+## Evidence-backed source graph
 
-1. `index.html` asks the user to select a local portrait and opt into analysis. **Source implemented; runtime unverified.**
-2. `src/app.js` decodes the local file and calls `analyzeFace(image)` only on the Analyze click. **Source implemented.**
-3. `src/models/mediapipe.js` loads pinned MediaPipe JS/WASM and Google's official task model and calls `FaceLandmarker.detect`. **Source implemented; CDN/model download and inference not runtime tested.**
-4. `src/contracts.js` maps the model's returned landmarks to a stable result object; throws for missing/invalid coordinates. **Source implemented; offline contract test defined.**
-5. `src/visualization.js` draws the image overlay and a **relative XYZ projection** derived from the SAME model points. **Source implemented; visually unverified.**
-6. `src/app.js` can export the normalized result JSON on demand, locally. **Source implemented; browser download not tested.**
+1. `src/models/mediapipe.js` imports the pinned Google Tasks Vision library and reads `FaceLandmarker.FACE_LANDMARKS_TESSELATION` and `FACE_LANDMARKS_CONTOURS` (documented official connectivity).
+2. `src/geometry/face-topology.js` validates/deduplicates connection edges and computes face-centered relative-Z view coordinates. This module is pure JS and independent of DOM/renderer.
+3. `src/contracts.js` keeps `photo3d.landmarks.v1`, now adding optional `topology` data identified by `photo3d.face-topology.v1` from the same real inference.
+4. `src/visualization.js` renders the original photo and inspector from this **same result**: dots, mesh overlay, official wireframe and contours, no synthesized landmarks.
+5. `src/app.js` owns UI state, touch/mouse orbit, zoom, reset and JSON export, separate from geometry logic.
+6. `tests/contracts.test.mjs` tests contracts/projection. `tests/browser-smoke.mjs` checks official topology count, different views, zoom and full browser model inference.
 
-## Explicit boundaries
+## What this does not mean
 
-- Relative MediaPipe Z is **not** physically calibrated depth; the inspector is a rotated point visualization.
-- No image is sent from application code to a server. The application **does** load third-party code/model assets when activated; runtime/network privacy must be reviewed.
-- No Depth Anything, Three.js geometry, real blinking or LivePortrait has been integrated.
-- This plain JS static prototype is a separate browser delivery path; integrating the earlier v0.2 TypeScript/NPM foundation requires an audited migration and adapter contracts.
+The mesh is connectivity of the image-visible face using MediaPipe's relative coordinates. This is **not** a depth map, reconstructed head, textured 3D mesh, physically calibrated surface or blinking rig. Hidden surfaces remain unknown. Do not advertise it otherwise.
 
-## Next gates
+## Next adapters
 
-Review PR, verify CI on exact SHA, enable Pages only after owner approves, verify real inference in Chrome/Edge and Samsung browser, then implement depth adapter and export test matrix.
+- `depth`: vetted browser AI depth model, clearly labeled relative vs metric distance; independent provider errors/telemetry.
+- `renderer`: Three.js/WebGL consuming normalized geometry and optional depth, replaceable without changing the AI provider.
+- `animation`: separate facial rig or model-based renderer after verifying realistic blink quality and licensing.
+- `packages`: reconcile prior TypeScript v0.2 prototype and versioned interface contracts; current browser pilot is not a published NPM engine.
+
+## References
+
+- MediaPipe Face Landmarker API: https://developers.google.com/edge/api/mediapipe/js/tasks-vision.facelandmarker
+- Google Face Landmarker guide: https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker
