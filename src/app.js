@@ -1,5 +1,7 @@
 import { analyzeFace } from "./models/mediapipe.js";
 import { paintPortrait, paintLandmarks } from "./visualization.js";
+import { initWorkspaceNav } from "./workspace-nav.js";
+import { initWorkspaceLab } from "./workspace-lab.js";
 
 const $ = id => document.getElementById(id);
 const nodes = { upload: $("upload"), sample: $("sample"), analyze: $("analyze"), export: $("export"),
@@ -133,4 +135,6 @@ nodes.cloud.addEventListener("pointerup",endDrag);
 nodes.cloud.addEventListener("pointercancel",endDrag);
 nodes.cloud.addEventListener("lostpointercapture",() => { activePointer = null; });
 addEventListener("pagehide", () => { if (objectUrl) URL.revokeObjectURL(objectUrl); });
+initWorkspaceNav();
+initWorkspaceLab();
 redraw();
