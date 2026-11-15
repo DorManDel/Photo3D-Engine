@@ -10,7 +10,7 @@ const nodes = { upload: $("upload"), sample: $("sample"), analyze: $("analyze"),
   overlay: $("landmarks"), portraitMesh: $("portraitMesh"), yaw: $("yaw"), pitch: $("pitch"), zoom: $("zoom"), mode: $("inspectorMode"), resetView: $("resetView"), meshStats: $("meshStats"),
   provenance: $("provenance"), portraitEmpty: $("portrait-empty"), cloudEmpty: $("cloud-empty") };
 let image = null, objectUrl = null, result = null, busy = false, imageRequestId = 0;
-let texturedViewer = null, texturedLoading = null, viewerGeneration = 0;
+let texturedViewer = null, texturedLoading = null, texturedInfo = null, viewerGeneration = 0;
 const isTexturedMode = () => nodes.mode.value === "texture" || nodes.mode.value === "texture-wireframe";
 function viewerSettings() {
   return {
@@ -21,7 +21,7 @@ function viewerSettings() {
 }
 function disposeViewer(){
   viewerGeneration++;
-  const old=texturedViewer; texturedViewer=null; texturedLoading=null;
+  const old=texturedViewer; texturedViewer=null; texturedLoading=null; texturedInfo=null;
   old?.dispose();
   nodes.mesh3d.dataset.state="disposed";
   nodes.exportPng.disabled=true;
@@ -47,6 +47,7 @@ async function ensureTexturedViewer(){
       nodes.mesh3d.dataset.state="building-mesh:"+version;
       const model=candidate.setModel(activeImage,activeResult);
       nodes.mesh3d.dataset.state="mesh-ready:"+version;
+      texturedInfo=model;
       texturedViewer=candidate;
       texturedViewer.setView(viewerSettings());
       nodes.meshStats.textContent=model.triangles+" textured triangles · "+model.textureWidth+"×"+model.textureHeight+" px";
@@ -89,10 +90,14 @@ function redraw(){
   $("pitchValue").textContent=nodes.pitch.value+"°";
   $("zoomValue").textContent=Number(nodes.zoom.value).toFixed(1)+"×";
   $("depthValue").textContent=Number(nodes.depth.value).toFixed(1)+"×";
-  if(!textured || !texturedViewer)
+  if(textured && texturedViewer && texturedInfo){
+    nodes.meshStats.textContent=texturedInfo.triangles+" textured triangles · "+
+      texturedInfo.textureWidth+"×"+texturedInfo.textureHeight+" px";
+  }else{
     nodes.meshStats.textContent=result
       ? result.landmarks.length+" points · "+(result.topology?.triangles?.length||0)+" official triangles"
       : "Analyze to inspect mesh";
+  }
   nodes.portraitEmpty.hidden=!!image;
   nodes.cloudEmpty.hidden=!!result;
 }
