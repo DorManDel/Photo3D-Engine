@@ -8,3 +8,5 @@
 - No FaceFusion/LivePortrait or Depth Anything dependency in the currently proposed static release.
 
 A non-bundled browser app still requires a network connection to the CDN/model hosts on first analysis. Mobile bandwidth/memory/performance have not yet been measured.
+
+- **Three.js `three@0.187.0`**, JavaScript/WebGL 3D renderer loaded lazily from jsDelivr in `src/renderers/three-textured.js`. [Official source and MIT license](https://github.com/mrdoob/three.js). It is not uploaded to a user photo service, and no credentials are used. For a future package/reproducible offline release, bundle the pinned dependency with its license and CSP/integrity policy.

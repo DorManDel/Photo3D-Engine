@@ -14,4 +14,4 @@ jobs:
         with:
           node-version: 22
       - run: node --test tests/*.test.mjs
-      - run: node --check src/app.js && node --check src/contracts.js && node --check src/models/mediapipe.js && node --check src/visualization.js && node --check src/geometry/face-topology.js
+      - run: node --check src/app.js && node --check src/contracts.js && node --check src/models/mediapipe.js && node --check src/visualization.js && node --check src/geometry/face-topology.js && node --check src/geometry/face-triangles.js && node --check src/renderers/three-textured.js && node --check src/visualization/face-reference.js
