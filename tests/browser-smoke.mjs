@@ -92,7 +92,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
         "Textured mesh not active; status="+textureStatus+" stats="+await page.locator("#meshStats").textContent());
       assert.equal(await page.locator("#cloud").isVisible(),false);
       assert.equal(await page.locator("#referenceCompare").isVisible(),true);
-      const triangles=Number((await page.locator("#meshStats").textContent()).match(/(\\d+) textured triangles/)?.[1]);
+      const triangles=Number((await page.locator("#meshStats").textContent()).match(/([0-9]+) textured triangles/)?.[1]);
       assert.ok(triangles > 700,"No fake geometry fallback");
       // Actual GPU canvas must hold real rendered pixels, not just an empty canvas.
       const pixels=await page.locator("#mesh3d canvas").evaluate(canvas=>{
