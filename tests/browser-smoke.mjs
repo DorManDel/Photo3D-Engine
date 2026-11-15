@@ -13,7 +13,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
     page.setDefaultTimeout(120_000);
     const browserErrors = [], failedRequests = [];
     page.on("pageerror", error => browserErrors.push(error.message));
-    page.on("console", message => {if(message.type()==="error") browserErrors.push("console: "+message.text());});
+    page.on("console", message => {if(message.type()==="error" && !/^INFO: Created TensorFlow Lite XNNPACK delegate/.test(message.text())) browserErrors.push("console: "+message.text());});
     page.on("requestfailed", request => failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"failed")));
     page.on("response", response => {if(response.status()>=400)failedRequests.push(response.status()+" "+response.url());});
     await page.goto(process.env.PHOTO3D_BASE_URL || "http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
