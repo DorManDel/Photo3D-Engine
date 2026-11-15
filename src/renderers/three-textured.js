@@ -75,9 +75,7 @@ export async function createTexturedViewer(container) {
     wireMaterial=new T.LineBasicMaterial({color:0xe6d6ff,opacity:.68,transparent:true,depthTest:false});
     lines=new T.LineSegments(new T.WireframeGeometry(geometry),wireMaterial);
     group.add(lines);lines.visible=false;
-    // WireframeGeometry is separately allocated; dispose it with the next image.
-    const oldGeometry=lines.geometry;
-    lines.userData.wireGeometry=oldGeometry;
+    // WireframeGeometry is disposed by releaseModel when the image changes.
     resize();
     return {vertices:surface.vertexCount,triangles:surface.triangleCount,textureWidth:source.width,textureHeight:source.height,depthKind:surface.geometryKind};
   }
@@ -100,12 +98,10 @@ export async function createTexturedViewer(container) {
   function dispose(){
     if(destroyed)return;
     observer.disconnect();
-    if(lines?.userData?.wireGeometry)lines.userData.wireGeometry.dispose();
     releaseModel();renderer.dispose();renderer.forceContextLoss?.();
     renderer.domElement.remove();destroyed=true;
   }
   // Cleanup must happen on repeated model loads too, not only final dispose.
-  const originalRelease=releaseModel;
   // Note: caller recreates viewer per image; controls reuse viewer within the image.
   resize();
   return {setModel,setView,screenshot,dispose,render:draw};
