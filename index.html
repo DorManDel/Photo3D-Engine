@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0e1020">
-  <meta name="description" content="Photo3D Lab: real face-landmark analysis and an honest relative-3D inspector.">
+  <meta name="description" content="Photo3D Lab: real facial landmarks, avatar research, experiment journal and an evidence-based development roadmap.">
   <title>Photo3D Lab • Landmark Research</title>
   <link rel="stylesheet" href="./styles.css">
   <script type="module" src="./src/app.js"></script>
@@ -18,7 +18,15 @@
       <a class="link" href="https://github.com/DorManDel/Photo3D-Engine" target="_blank" rel="noopener noreferrer">Source ↗</a>
     </header>
 
-    <section class="toolbar" aria-label="Portrait controls">
+    <nav class="workspace-nav" role="tablist" aria-label="Photo3D workspace">
+      <button type="button" class="workspace-tab" id="tab-portrait-lab" role="tab" aria-controls="portrait-lab" aria-selected="true" tabindex="0" data-page="portrait-lab">Portrait Lab</button>
+      <button type="button" class="workspace-tab" id="tab-avatar-studio" role="tab" aria-controls="avatar-studio" aria-selected="false" tabindex="-1" data-page="avatar-studio">Avatar Studio</button>
+      <button type="button" class="workspace-tab" id="tab-experiment-lab" role="tab" aria-controls="experiment-lab" aria-selected="false" tabindex="-1" data-page="experiment-lab">Experiment Lab</button>
+      <button type="button" class="workspace-tab" id="tab-roadmap" role="tab" aria-controls="roadmap" aria-selected="false" tabindex="-1" data-page="roadmap">Roadmap</button>
+    </nav>
+
+    <section id="portrait-lab" class="workspace-page" role="tabpanel" aria-labelledby="tab-portrait-lab">
+      <section class="toolbar" aria-label="Portrait controls">
       <label class="file"><span>Choose a portrait</span><input type="file" id="upload" accept="image/png,image/jpeg,image/webp" aria-describedby="privacy"></label>
       <button id="sample" type="button">Use portfolio sample</button>
       <button id="analyze" type="button" disabled>Analyze face</button>
@@ -47,6 +55,55 @@
     <section class="disclosure" aria-label="Technical boundaries">
       <strong>What's real?</strong> Detected landmark coordinates, official MediaPipe edge connections and expression scores. <strong>What's not here yet?</strong> AI depth estimation, textured 3D reconstruction or realistic blinking.
       <p>Model assets are downloaded on first analysis. Device speed, browser support and network access affect success. We never quietly substitute a simulated result.</p>
+    </section>
+    </section>
+
+    <section id="avatar-studio" class="workspace-page" role="tabpanel" aria-labelledby="tab-avatar-studio" hidden>
+      <div class="section-intro"><p class="eyebrow">02 / FUTURE CAPABILITIES</p><h2>Avatar Studio</h2>
+        <p>Our destination: drive a rigged 3D avatar from facial expressions and head motion, then reuse it in webcam scenes and games. These modules are <strong>planned, not implemented</strong>.</p></div>
+      <div class="module-grid">
+        <article class="module-card"><span class="module-state planned">PLANNED · M1</span><h3>Live Face Capture</h3><p>Opt-in webcam, head pose, expression coefficients, tracking-loss handling and explicit performance metrics.</p></article>
+        <article class="module-card"><span class="module-state planned">PLANNED · M2</span><h3>Avatar Puppeteering</h3><p>Load a licensed rigged avatar, calibrate expression mappings, smooth motion and record/replay animation.</p></article>
+        <article class="module-card"><span class="module-state planned">PLANNED · M3</span><h3>Virtual Camera Scenes</h3><p>Scene rendering for OBS browser source and virtual camera workflows; no direct virtual-camera driver yet.</p></article>
+        <article class="module-card"><span class="module-state planned">PLANNED · M4–M5</span><h3>Reconstruct &amp; Export</h3><p>Separate photo/video reconstruction from animation rigs. Investigate GLB/VRM, static OBJ and print-ready STL.</p></article>
+      </div>
+      <div class="info-strip">Architecture rule: facial landmarks are not a calibrated full-head scan. Reconstruction, motion tracking and printable geometry require independent evidence.</div>
+    </section>
+
+    <section id="experiment-lab" class="workspace-page" role="tabpanel" aria-labelledby="tab-experiment-lab" hidden>
+      <div class="section-intro"><p class="eyebrow">03 / RESEARCH + QUALITY</p><h2>Experiment Lab</h2>
+        <p>Run repeatable manual acceptance checks as we add capabilities. Save outcomes on this device and export a checkpoint; this is a <strong>test journal, not an automatic benchmark</strong>.</p></div>
+      <div class="lab-layout">
+        <div class="panel lab-panel">
+          <h3>Test categories</h3>
+          <div id="lab-suite-tabs" class="lab-suite-tabs" role="tablist" aria-label="Experiment categories"></div>
+          <div class="lab-control">
+            <label for="lab-case">Test scenario</label>
+            <select id="lab-case"></select>
+          </div>
+          <div id="lab-case-details" class="lab-case-details" aria-live="polite"></div>
+        </div>
+        <form class="panel lab-panel" id="lab-form">
+          <h3>Test journal</h3>
+          <p class="caption">Manual observations only. No photos, raw video or face landmarks are saved here.</p>
+          <div class="lab-control"><label for="lab-result">Outcome</label>
+            <select id="lab-result" required><option value="pass">Pass</option><option value="fail">Fail</option><option value="blocked">Blocked</option><option value="not-run">Not run</option></select></div>
+          <div class="lab-control"><label for="lab-notes">Notes (optional)</label>
+            <textarea id="lab-notes" rows="5" maxlength="2000" placeholder="Device, browser, observations, limitations…"></textarea></div>
+          <div class="lab-actions"><button type="submit" id="lab-save">Save result locally</button><button type="button" class="secondary" id="lab-export">Export test journal JSON</button></div>
+          <p id="lab-feedback" class="hint" role="status" aria-live="polite">No test results recorded yet.</p>
+          <div id="lab-history" class="lab-history" aria-live="polite"></div>
+        </form>
+      </div>
+      <div class="info-strip">Privacy: results are stored in this browser's localStorage only. Export is a user-triggered download; clearing browser storage removes local records.</div>
+    </section>
+
+    <section id="roadmap" class="workspace-page" role="tabpanel" aria-labelledby="tab-roadmap" hidden>
+      <div class="section-intro"><p class="eyebrow">04 / DEVELOPMENT PLAN</p><h2>Milestones &amp; Architecture</h2>
+        <p>Build the smallest useful feature, measure it, review it, then unlock the next phase. A milestone is only complete when its acceptance criteria have evidence.</p></div>
+      <div id="milestone-list" class="milestone-list" aria-label="Photo3D milestones"></div>
+      <div class="info-strip">Source code → evidence map → prototype → tests → owner review → publish. Public source and private PCM remain separate.</div>
+      <p class="caption">Read the full <a href="https://github.com/DorManDel/Photo3D-Engine/blob/main/docs/ROADMAP.md" target="_blank" rel="noopener noreferrer">engineering roadmap</a> after the reviewed change is merged.</p>
     </section>
     <footer><a href="https://dormandel.github.io/MobiLab/" target="_blank" rel="noopener noreferrer">← MobiLab</a> · <a href="https://github.com/DorManDel/Photo3D-Engine" target="_blank" rel="noopener noreferrer">Photo3D source</a></footer>
   </main>
