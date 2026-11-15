@@ -10,3 +10,17 @@
 #cloud{touch-action:none;cursor:grab}
 #cloud:active{cursor:grabbing}
 @media(max-width:800px){.inspector-toolbar .measure{margin-left:0;flex-basis:100%}}
+
+/* v0.4: GPU surface is optional; the Canvas2D point inspector remains usable. */
+.stage.points{touch-action:none}
+#cloud[hidden],.mesh3d[hidden],.reference-compare[hidden],.angle-warning[hidden]{display:none!important}
+.mesh3d{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden}
+.mesh3d canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.mesh3d canvas:active{cursor:grabbing}
+.reference-compare{position:absolute;bottom:10px;left:10px;z-index:2;display:grid;gap:3px;width:clamp(66px,17%,96px);padding:4px;background:rgba(12,12,25,.8);border:1px solid #9180b5;border-radius:10px;pointer-events:none;box-shadow:0 5px 18px rgba(0,0,0,.25)}
+.reference-compare canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius:6px}
+.reference-compare span{text-align:center;letter-spacing:.12em;font-size:.55rem;color:#ffdd86}
+.angle-warning{margin:.8rem 0 0;padding:.65rem .8rem;background:#483021;border:1px solid #b28547;color:#ffdfaa;border-radius:10px;font-size:.8rem;line-height:1.35}
+#exportPng:disabled{opacity:.38}
+.sliders input[type="range"]{min-height:35px}
+@media(max-width:800px){.sliders{grid-template-columns:repeat(2,minmax(0,1fr))}.inspector-toolbar select{max-width:190px}.reference-compare{width:70px}}
