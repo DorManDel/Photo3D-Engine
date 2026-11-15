@@ -66,8 +66,14 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       await page.waitForFunction(() => {
         const stats=document.querySelector("#meshStats")?.textContent || "";
         const button=document.querySelector("#exportPng");
-        return !!document.querySelector("#mesh3d canvas") && /textured triangles/.test(stats) && button && !button.disabled;
-      });
+        const message=document.querySelector("#status")?.textContent || "";
+        return /Textured mode unavailable/.test(message) ||
+          (!!document.querySelector("#mesh3d canvas") && /textured triangles/.test(stats) && button && !button.disabled);
+      },null,{timeout:45000});
+      const textureStatus=await page.locator("#status").textContent();
+      assert.doesNotMatch(textureStatus,/Textured mode unavailable/,textureStatus);
+      assert.equal(await page.locator("#exportPng").isEnabled(),true,
+        "Textured mesh not active; status="+textureStatus+" stats="+await page.locator("#meshStats").textContent());
       assert.equal(await page.locator("#cloud").isVisible(),false);
       assert.equal(await page.locator("#referenceCompare").isVisible(),true);
       const triangles=Number((await page.locator("#meshStats").textContent()).match(/(\\d+) textured triangles/)?.[1]);
