@@ -58,3 +58,42 @@ test("untrusted/invalid topology and image dimensions produce errors rather than
   assert.throws(()=>createTexturedFaceSurface(data,{width:0,height:900}),/Invalid/);
   assert.throws(()=>createTexturedFaceSurface(data,{width:600,height:900,depthStrength:12}),/Invalid/);
 });
+
+import { auditFaceSurface } from "../src/geometry/surface-audit.js";
+
+test("a two-triangle flat quad has one open boundary component",()=>{
+  const surface={
+    positions:new Float32Array([0,0,0, 1,0,0, 1,1,0, 0,1,0, 9,9,9]),
+    indices:new Uint16Array([0,1,2, 0,2,3])
+  };
+  const audit=auditFaceSurface(surface);
+  assert.equal(audit.schema,"photo3d.surface-audit.v1");
+  assert.equal(audit.triangleCount,2);
+  assert.equal(audit.boundaryEdgeCount,4);
+  assert.equal(audit.boundaryComponents,1);
+  assert.equal(audit.nonManifoldEdgeCount,0);
+  assert.equal(audit.unusedVertices,1);
+  assert.equal(audit.closed,false);
+});
+test("audit recognizes an overused non-manifold edge but never fills it",()=>{
+  const audit=auditFaceSurface({
+    positions:new Float32Array([0,0,0, 1,0,0, 0,1,0, 1,1,0, 0,-1,0]),
+    indices:new Uint16Array([0,1,2, 1,0,3, 0,1,4])
+  });
+  assert.equal(audit.nonManifoldEdgeCount,1);
+  assert.ok(audit.boundaryEdgeCount>0);
+});
+test("audit rejects broken or nonexistent surface geometry",()=>{
+  assert.throws(()=>auditFaceSurface({positions:new Float32Array(9),indices:new Uint16Array([0,1,4])}),/Invalid triangle index/);
+  assert.throws(()=>auditFaceSurface({positions:new Float32Array(9),indices:new Uint16Array([0,1])}),/Valid indexed/);
+});
+test("provider-defined eye and lip region edges remain normalized without fake indexing",()=>{
+  const raw={faceLandmarks:[[{x:.1,y:.2,z:0},{x:.3,y:.4,z:-.1},{x:.5,y:.6,z:-.2}]]};
+  const g=normalizeFaceResult(raw,"test","model",{
+    source:"provider",tessellation:triples,
+    regions:{leftEye:[[0,1],[1,0],[1,99]],rightEye:[[1,2]],lips:[[0,2]]}
+  }).topology.regions;
+  assert.deepEqual(g.leftEye,[[0,1]]);
+  assert.deepEqual(g.rightEye,[[1,2]]);
+  assert.deepEqual(g.lips,[[0,2]]);
+});

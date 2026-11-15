@@ -15,20 +15,28 @@ export function normalizeConnections(connections, count) {
   }
   return result;
 }
-export function normalizeFaceTopology(topology,count) {
+
+export function normalizeFaceTopology(topology,count){
   if(!topology)return null;
-  // Must extract BEFORE deduplicating edges, since official MediaPipe edges
-  // come in directed groups of three and deduplication destroys that order.
   const triangles=Array.isArray(topology.triangles)
     ? normalizeFaceTriangles(topology.triangles,count)
     : extractOrderedTriangles(topology.tessellation,count);
+  const official=topology.regions||{};
   return {
-    schema:TOPOLOGY_SCHEMA,source:String(topology.source||"unknown"),
+    schema:TOPOLOGY_SCHEMA,
+    source:String(topology.source||"unknown"),
     tessellation:normalizeConnections(topology.tessellation,count),
     contours:normalizeConnections(topology.contours,count),
-    triangles
+    triangles,
+    // Optional provider-defined feature boundaries, never inferred from guessed indices.
+    regions:{
+      leftEye:normalizeConnections(official.leftEye,count),
+      rightEye:normalizeConnections(official.rightEye,count),
+      lips:normalizeConnections(official.lips,count)
+    }
   };
 }
+
 /** Relative landmark XYZ, centered in landmark bounding box. NOT calibrated depth. */
 export function projectFace(landmarks,yawDegrees=0,pitchDegrees=0) {
   if(!Array.isArray(landmarks)||!landmarks.length)return [];

@@ -1,6 +1,6 @@
 {
   "name": "@webforge/photo3d-face-surface",
-  "version": "0.4.0-dev.0",
+  "version": "0.4.1-dev.0",
   "private": true,
   "type": "module",
   "description": "Experimental pure-ESM MediaPipe face triangle topology and UV surface contracts; no runtime dependencies.",
@@ -9,7 +9,11 @@
   "exports": {
     ".": "./dist/index.js",
     "./triangles": "./dist/face-triangles.js",
-    "./topology": "./dist/face-topology.js"
+    "./topology": "./dist/face-topology.js",
+    "./audit": "./dist/surface-audit.js"
   },
-  "files": ["dist/", "README.md"]
+  "files": [
+    "dist/",
+    "README.md"
+  ]
 }

@@ -7,6 +7,7 @@ const nodes = { upload: $("upload"), sample: $("sample"), analyze: $("analyze"),
   portrait: $("portrait"), cloud: $("cloud"), status: $("status"),
   stage: $("inspectorStage"), mesh3d: $("mesh3d"), reference: $("referenceCompare"),
   referenceCrop: $("referenceCrop"), exportPng: $("exportPng"), depth: $("depth"), warning: $("angleWarning"),
+  regions: $("featureRegions"), wireStyle: $("wireStyle"), frontCheck: $("frontCheck"), surfaceAudit: $("surfaceAudit"),
   overlay: $("landmarks"), portraitMesh: $("portraitMesh"), yaw: $("yaw"), pitch: $("pitch"), zoom: $("zoom"), mode: $("inspectorMode"), resetView: $("resetView"), meshStats: $("meshStats"),
   provenance: $("provenance"), portraitEmpty: $("portrait-empty"), cloudEmpty: $("cloud-empty") };
 let image = null, objectUrl = null, result = null, busy = false, imageRequestId = 0;
@@ -16,7 +17,8 @@ function viewerSettings() {
   return {
     yaw: Number(nodes.yaw.value), pitch: Number(nodes.pitch.value),
     zoom: Number(nodes.zoom.value), depthStrength: Number(nodes.depth.value),
-    wireframe: nodes.mode.value === "texture-wireframe"
+    wireframe: nodes.mode.value === "texture-wireframe",
+    wireStyle: nodes.wireStyle.value
   };
 }
 function disposeViewer(){
@@ -25,6 +27,7 @@ function disposeViewer(){
   old?.dispose();
   nodes.mesh3d.dataset.state="disposed";
   nodes.exportPng.disabled=true;
+  nodes.surfaceAudit.textContent="Analyze a face to inspect its mesh boundaries.";
 }
 async function ensureTexturedViewer(){
   if(texturedViewer || texturedLoading || !result || !image || !isTexturedMode())return;
@@ -72,7 +75,7 @@ async function ensureTexturedViewer(){
 function status(message) { nodes.status.textContent = message; }
 function redraw(){
   const textured=isTexturedMode() && !!result && !!image;
-  paintPortrait(nodes.portrait,image,result,nodes.overlay.checked,nodes.portraitMesh.checked);
+  paintPortrait(nodes.portrait,image,result,nodes.overlay.checked,nodes.portraitMesh.checked,nodes.regions.checked);
   if(!textured)paintLandmarks(nodes.cloud,result,Number(nodes.yaw.value),Number(nodes.pitch.value),{
     mode:nodes.mode.value,zoom:Number(nodes.zoom.value)
   });
@@ -80,6 +83,8 @@ function redraw(){
   nodes.mesh3d.hidden=!textured;
   nodes.reference.hidden=!textured;
   nodes.warning.hidden=!textured || Math.abs(Number(nodes.yaw.value))<43;
+  nodes.wireStyle.disabled=nodes.mode.value!=="texture-wireframe";
+  nodes.frontCheck.disabled=!result;
   if(textured){
     drawFaceReference(nodes.referenceCrop,image,result);
     if(texturedViewer)texturedViewer.setView(viewerSettings());
@@ -93,10 +98,19 @@ function redraw(){
   if(textured && texturedViewer && texturedInfo){
     nodes.meshStats.textContent=texturedInfo.triangles+" textured triangles · "+
       texturedInfo.textureWidth+"×"+texturedInfo.textureHeight+" px";
+    nodes.surfaceAudit.textContent="Measured topology: "+
+      texturedInfo.boundaryEdges+" open edges · "+
+      texturedInfo.boundaryComponents+" boundary components · "+
+      texturedInfo.nonManifoldEdges+" non-manifold edges. Gaps are not auto-classified as eyes.";
   }else{
     nodes.meshStats.textContent=result
       ? result.landmarks.length+" points · "+(result.topology?.triangles?.length||0)+" official triangles"
       : "Analyze to inspect mesh";
+    if(!textured){
+      nodes.surfaceAudit.textContent=result
+        ? "Choose a textured mode to inspect open surface boundaries."
+        : "Analyze a face to inspect its mesh boundaries.";
+    }
   }
   nodes.portraitEmpty.hidden=!!image;
   nodes.cloudEmpty.hidden=!!result;
@@ -184,11 +198,22 @@ nodes.export.addEventListener("click", () => {
   const a = document.createElement("a");a.href = url;a.download = "photo3d-landmarks.json";a.click();
   setTimeout(() => URL.revokeObjectURL(url),1000);
 });
-for(const input of [nodes.overlay,nodes.portraitMesh,nodes.yaw,nodes.pitch,nodes.zoom,nodes.depth,nodes.mode]){
+for(const input of [nodes.overlay,nodes.portraitMesh,nodes.regions,nodes.yaw,nodes.pitch,nodes.zoom,nodes.depth,nodes.mode,nodes.wireStyle]){
   input.addEventListener("input",redraw);
 }
+nodes.frontCheck.addEventListener("click",()=>{
+  if(!result)return;
+  // Diagnostic preset only: no face correction or invented 3D geometry.
+  nodes.mode.value="texture";
+  nodes.yaw.value="0";nodes.pitch.value="0";nodes.zoom.value="1";nodes.depth.value="0";
+  nodes.reference.classList.add("is-expanded");
+  nodes.frontCheck.setAttribute("aria-pressed","true");
+  redraw();
+});
 nodes.resetView.addEventListener("click",()=>{
   nodes.yaw.value="0";nodes.pitch.value="0";nodes.zoom.value="1";nodes.depth.value="1";
+  nodes.reference.classList.remove("is-expanded");
+  nodes.frontCheck.setAttribute("aria-pressed","false");
   redraw();
 });
 nodes.exportPng.addEventListener("click",async()=>{
@@ -251,4 +276,4 @@ addEventListener("pagehide",()=>{
 redraw();
 
 // Safe development diagnostics: stage only, no user image data or landmark data exposed.
-window.photo3dStatus=()=>({stage:nodes.mesh3d.dataset.state||"idle",generation:viewerGeneration,loading:!!texturedLoading,ready:!!texturedViewer,mode:nodes.mode.value});
+window.photo3dStatus=()=>({stage:nodes.mesh3d.dataset.state||"idle",generation:viewerGeneration,loading:!!texturedLoading,ready:!!texturedViewer,mode:nodes.mode.value,render:texturedViewer?.diagnostics()||null});

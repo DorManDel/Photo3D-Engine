@@ -105,7 +105,30 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
         return {lit,total:data.length/4};
       });
       assert.ok(pixels.lit > pixels.total*.01,"Textured mesh should occupy >1% of the GPU canvas");
+      if(!process.env.PHOTO3D_BASE_URL) {
+        assert.ok(output.topology.regions.leftEye.length>0,"Real left eye edges");
+        assert.ok(output.topology.regions.rightEye.length>0,"Real right eye edges");
+        assert.ok(output.topology.regions.lips.length>0,"Real mouth edges");
+        await page.locator("#featureRegions").check();
+        assert.match(await page.locator("#surfaceAudit").textContent(),/[0-9]+ open edges/);
+        const initial=await page.evaluate(()=>window.photo3dStatus().render);
+        assert.ok(initial.report.boundaryEdges>0,"Real open mesh boundaries");
+        assert.equal(initial.report.nonManifoldEdges,0);
+      }
       await page.locator("#inspectorMode").selectOption("texture-wireframe");
+      if(!process.env.PHOTO3D_BASE_URL){
+        await page.locator("#wireStyle").selectOption("xray");
+        assert.equal(await page.evaluate(()=>window.photo3dStatus().render.wireDepthTest),false);
+        await page.locator("#wireStyle").selectOption("borders");
+        assert.equal(await page.evaluate(()=>window.photo3dStatus().render.bordersVisible),true);
+        await page.locator("#wireStyle").selectOption("surface");
+        assert.equal(await page.evaluate(()=>window.photo3dStatus().render.wireDepthTest),true);
+        await page.getByRole("button",{name:"Compare 0°"}).click();
+        assert.equal(await page.locator("#depthValue").textContent(),"0.0×");
+        assert.equal(await page.locator("#yawValue").textContent(),"0°");
+        assert.equal(await page.locator("#referenceCompare").evaluate(el=>el.classList.contains("is-expanded")),true);
+        await page.locator("#inspectorMode").selectOption("texture-wireframe");
+      }
       await page.locator("#depth").evaluate(el=>{el.value="0";el.dispatchEvent(new Event("input",{bubbles:true}));});
       assert.equal(await page.locator("#depthValue").textContent(),"0.0×");
       await page.locator("#yaw").evaluate(el=>{el.value="30";el.dispatchEvent(new Event("input",{bubbles:true}));});

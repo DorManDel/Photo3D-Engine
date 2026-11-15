@@ -49,3 +49,12 @@ The official tessellation arrives in successive directed groups `[a→b,b→c,c�
 - MediaPipe tessellation source: https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/web/vision/face_landmarker/face_landmarks_connections.ts
 - Three.js geometry: https://threejs.org/docs/pages/BufferGeometry.html
 - Three.js texture: https://threejs.org/docs/pages/Texture.html
+
+## v0.4.1 quality control
+
+- **New pure package geometry:** `src/geometry/surface-audit.js` traverses indexed triangles, counts real open boundary edges, connected boundary components, non-manifold edges, and unused vertices. No repair, inferred eyes, or invented surfaces.
+- **Official feature groups:** `src/models/mediapipe.js` supplies `FACE_LANDMARKS_LEFT_EYE`, `FACE_LANDMARKS_RIGHT_EYE`, and `FACE_LANDMARKS_LIPS`; `src/geometry/face-topology.js` validates the edges; `src/visualization.js` highlights them on the source image. An independent renderer can consume the same contract.
+- **Renderer:** `src/renderers/three-textured.js` uses polygon offset on the textured mesh. Normal wireframe uses `depthTest=true`; X-Ray sets it to `false`; Open borders shows only edges belonging to one face triangle, depth-tested. Material flags are changed only when necessary.
+- **Front projection check:** `src/app.js` sets yaw/pitch to zero, uses flat relative Z and enlarges the actual source crop. This is a *visual* comparison, not pixel-registered quantitative error measurement. Hidden surfaces remain unknown.
+- **Automated checks:** `tests/surface.test.mjs` and `tests/package.test.mjs` validate audit counts and model regions; `tests/browser-smoke.mjs` uses a real MediaPipe result and tests renderer depth/X-Ray/border behavior in Chromium.
+- **Next modules (proposals, not implemented):** face/iris/eyelid surface adapters, mouth interior/expression driver, person/hair/face mask inference, optional Depth Anything V2, occlusion-aware layer compositing. See `docs/PROVIDER_ROADMAP.md`.
