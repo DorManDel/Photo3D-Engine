@@ -4,16 +4,22 @@ import { paintPortrait, paintLandmarks } from "./visualization.js";
 const $ = id => document.getElementById(id);
 const nodes = { upload: $("upload"), sample: $("sample"), analyze: $("analyze"), export: $("export"),
   portrait: $("portrait"), cloud: $("cloud"), status: $("status"),
-  overlay: $("landmarks"), yaw: $("yaw"), pitch: $("pitch"),
+  overlay: $("landmarks"), portraitMesh: $("portraitMesh"), yaw: $("yaw"), pitch: $("pitch"), zoom: $("zoom"), mode: $("inspectorMode"), resetView: $("resetView"), meshStats: $("meshStats"),
   provenance: $("provenance"), portraitEmpty: $("portrait-empty"), cloudEmpty: $("cloud-empty") };
 let image = null, objectUrl = null, result = null, busy = false, imageRequestId = 0;
 
 function status(message) { nodes.status.textContent = message; }
 function redraw() {
-  paintPortrait(nodes.portrait, image, result, nodes.overlay.checked);
-  paintLandmarks(nodes.cloud, result, Number(nodes.yaw.value), Number(nodes.pitch.value));
+  paintPortrait(nodes.portrait, image, result, nodes.overlay.checked, nodes.portraitMesh.checked);
+  paintLandmarks(nodes.cloud, result, Number(nodes.yaw.value), Number(nodes.pitch.value), {
+    mode: nodes.mode.value, zoom: Number(nodes.zoom.value)
+  });
   $("yawValue").textContent = nodes.yaw.value + "°";
   $("pitchValue").textContent = nodes.pitch.value + "°";
+  $("zoomValue").textContent = Number(nodes.zoom.value).toFixed(1) + "×";
+  nodes.meshStats.textContent = result
+    ? result.landmarks.length + " points · " + (result.topology?.tessellation?.length || 0) + " official edges"
+    : "Analyze to inspect mesh";
   nodes.portraitEmpty.hidden = !!image;
   nodes.cloudEmpty.hidden = !!result;
 }
@@ -98,6 +104,33 @@ nodes.export.addEventListener("click", () => {
   const a = document.createElement("a");a.href = url;a.download = "photo3d-landmarks.json";a.click();
   setTimeout(() => URL.revokeObjectURL(url),1000);
 });
-for (const input of [nodes.overlay,nodes.yaw,nodes.pitch]) input.addEventListener("input",redraw);
+for (const input of [nodes.overlay,nodes.portraitMesh,nodes.yaw,nodes.pitch,nodes.zoom,nodes.mode]) {
+  input.addEventListener("input",redraw);
+}
+nodes.resetView.addEventListener("click", () => {
+  nodes.yaw.value = "0"; nodes.pitch.value = "0"; nodes.zoom.value = "1";
+  redraw();
+});
+let activePointer = null;
+nodes.cloud.addEventListener("pointerdown", event => {
+  if (!result) return;
+  activePointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  nodes.cloud.setPointerCapture(event.pointerId);
+});
+nodes.cloud.addEventListener("pointermove", event => {
+  if (!activePointer || event.pointerId !== activePointer.id) return;
+  const rect = nodes.cloud.getBoundingClientRect();
+  const dx=(event.clientX-activePointer.x)/Math.max(1,rect.width);
+  const dy=(event.clientY-activePointer.y)/Math.max(1,rect.height);
+  activePointer.x=event.clientX; activePointer.y=event.clientY;
+  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+  nodes.yaw.value=String(clamp(Number(nodes.yaw.value)+dx*160,-70,70));
+  nodes.pitch.value=String(clamp(Number(nodes.pitch.value)-dy*110,-50,50));
+  redraw();
+});
+const endDrag=event => { if(activePointer?.id === event.pointerId) activePointer = null; };
+nodes.cloud.addEventListener("pointerup",endDrag);
+nodes.cloud.addEventListener("pointercancel",endDrag);
+nodes.cloud.addEventListener("lostpointercapture",() => { activePointer = null; });
 addEventListener("pagehide", () => { if (objectUrl) URL.revokeObjectURL(objectUrl); });
 redraw();
