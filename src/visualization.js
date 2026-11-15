@@ -1,5 +1,21 @@
-/** Canvas views share exactly one normalized landmark dataset. No invented depth. */
-export function paintPortrait(canvas, image, result, overlay = true) {
+import { projectFace } from "./geometry/face-topology.js";
+
+/** Canvas views use the same normalized model result; no synthetic depth or features. */
+function drawLinks(ctx, vertices, edges, scale, cx, cy, opacity) {
+  if (!Array.isArray(edges) || !edges.length) return;
+  ctx.strokeStyle = "rgba(192,170,255," + opacity + ")";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const [a, b] of edges) {
+    const p=vertices[a], q=vertices[b];
+    if (!p || !q) continue;
+    ctx.moveTo(cx+p.x*scale,cy-p.y*scale);
+    ctx.lineTo(cx+q.x*scale,cy-q.y*scale);
+  }
+  ctx.stroke();
+}
+
+export function paintPortrait(canvas, image, result, overlay = true, showMesh = false) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
@@ -9,36 +25,54 @@ export function paintPortrait(canvas, image, result, overlay = true) {
   const rw = iw * scale, rh = ih * scale, left = (w - rw) / 2, top = (h - rh) / 2;
   ctx.drawImage(image, left, top, rw, rh);
   if (!result || !overlay) return;
-  ctx.fillStyle = "#f3d76f";
+  if (showMesh && result.topology?.tessellation?.length) {
+    ctx.strokeStyle="rgba(182,148,255,.44)";
+    ctx.lineWidth=.65;
+    ctx.beginPath();
+    for (const [a,b] of result.topology.tessellation) {
+      const p=result.landmarks[a],q=result.landmarks[b];
+      if (!p || !q) continue;
+      ctx.moveTo(left+p.x*rw,top+p.y*rh);
+      ctx.lineTo(left+q.x*rw,top+q.y*rh);
+    }
+    ctx.stroke();
+  }
+  ctx.fillStyle = showMesh ? "rgba(250,223,126,.76)" : "#f3d76f";
+  const radius = showMesh ? .7 : 1.3;
   for (const p of result.landmarks) {
-    ctx.beginPath();ctx.arc(left + p.x * rw, top + p.y * rh, 1.3, 0, Math.PI * 2);ctx.fill();
+    ctx.beginPath(); ctx.arc(left+p.x*rw,top+p.y*rh,radius,0,Math.PI*2);ctx.fill();
   }
 }
 
-export function projectLandmark({ x, y, z }, yawDegrees, pitchDegrees) {
-  const yaw = yawDegrees * Math.PI / 180, pitch = pitchDegrees * Math.PI / 180;
-  const px = (x - 0.5) * 2, py = (0.5 - y) * 2;
-  const pz = -z * 2;
-  const xx = px * Math.cos(yaw) + pz * Math.sin(yaw);
-  const zz = -px * Math.sin(yaw) + pz * Math.cos(yaw);
-  const yy = py * Math.cos(pitch) - zz * Math.sin(pitch);
-  const dz = py * Math.sin(pitch) + zz * Math.cos(pitch);
-  return { x: xx, y: yy, z: dz };
+// Preserve the original public single-landmark projection for existing consumers.
+export function projectLandmark({ x,y,z },yawDegrees,pitchDegrees) {
+  const yaw=yawDegrees*Math.PI/180,pitch=pitchDegrees*Math.PI/180;
+  const px=(x-.5)*2,py=(.5-y)*2,pz=-z*2;
+  const xx=px*Math.cos(yaw)+pz*Math.sin(yaw);
+  const zz=-px*Math.sin(yaw)+pz*Math.cos(yaw);
+  return {x:xx,y:py*Math.cos(pitch)-zz*Math.sin(pitch),z:py*Math.sin(pitch)+zz*Math.cos(pitch)};
 }
 
-export function paintLandmarks(canvas, result, yaw = 0, pitch = 0) {
-  const ctx = canvas.getContext("2d");
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
+export function paintLandmarks(canvas, result, yaw=0, pitch=0, {mode="wireframe",zoom=1}={}) {
+  const ctx=canvas.getContext("2d");
+  const w=canvas.width,h=canvas.height;
+  ctx.clearRect(0,0,w,h);
   if (!result) return;
-  const points = result.landmarks.map(p => projectLandmark(p, yaw, pitch)).sort((a,b) => a.z - b.z);
-  const size = Math.min(w, h) * .40;
-  ctx.strokeStyle = "rgba(219,202,255,.20)";
-  ctx.beginPath();ctx.moveTo(w/2 - size,w/2 * 0 + h/2);ctx.lineTo(w/2 + size,h/2);ctx.moveTo(w/2,h/2 - size);ctx.lineTo(w/2,h/2 + size);ctx.stroke();
-  for (const p of points) {
-    const cx = w/2 + p.x*size, cy = h/2-p.y*size;
-    const radius = Math.max(.8,Math.min(3,1.3 + p.z));
-    ctx.fillStyle = p.z > 0 ? "#f2d879" : "#b39ae9";
-    ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
+  const projected=projectFace(result.landmarks,yaw,pitch);
+  const size=Math.min(w,h)*.35*Math.min(2.2,Math.max(.6,Number(zoom)||1));
+  const cx=w/2,cy=h/2;
+  ctx.strokeStyle="rgba(210,194,248,.17)";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-size*1.1,cy);ctx.lineTo(cx+size*1.1,cy);
+  ctx.moveTo(cx,cy-size*1.1);ctx.lineTo(cx,cy+size*1.1);ctx.stroke();
+
+  if(mode==="wireframe") drawLinks(ctx,projected,result.topology?.tessellation,size,cx,cy,.45);
+  if(mode==="contours") drawLinks(ctx,projected,result.topology?.contours,size,cx,cy,.92);
+  const paintDots=mode==="points" || mode==="wireframe";
+  if (paintDots) {
+    for(const p of [...projected].sort((a,b)=>a.z-b.z)) {
+      const radius=mode==="points"?1.9:1.1;
+      ctx.fillStyle=p.z>0?"#f3da7d":"#cbb6f7";
+      ctx.beginPath();ctx.arc(cx+p.x*size,cy-p.y*size,radius,0,Math.PI*2);ctx.fill();
+    }
   }
 }
