@@ -80,6 +80,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
           status:document.querySelector("#status")?.textContent,
           stats:document.querySelector("#meshStats")?.textContent,
           canvasCount:document.querySelectorAll("#mesh3d canvas").length,
+          runtime:window.photo3dStatus?.(),
           urls:performance.getEntriesByType("resource").filter(e=>e.name.includes("three")).map(e=>e.name)
         }));
         console.log("TEXTURE_INIT_DIAGNOSTIC",JSON.stringify({state,failedRequests,browserErrors}));
