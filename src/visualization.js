@@ -15,7 +15,7 @@ function drawLinks(ctx, vertices, edges, scale, cx, cy, opacity) {
   ctx.stroke();
 }
 
-export function paintPortrait(canvas, image, result, overlay = true, showMesh = false) {
+export function paintPortrait(canvas, image, result, overlay = true, showMesh = false, showRegions = false) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
@@ -24,8 +24,8 @@ export function paintPortrait(canvas, image, result, overlay = true, showMesh = 
   const scale = Math.min(w / iw, h / ih);
   const rw = iw * scale, rh = ih * scale, left = (w - rw) / 2, top = (h - rh) / 2;
   ctx.drawImage(image, left, top, rw, rh);
-  if (!result || !overlay) return;
-  if (showMesh && result.topology?.tessellation?.length) {
+  if (!result) return;
+  if (overlay && showMesh && result.topology?.tessellation?.length) {
     ctx.strokeStyle="rgba(182,148,255,.44)";
     ctx.lineWidth=.65;
     ctx.beginPath();
@@ -37,10 +37,27 @@ export function paintPortrait(canvas, image, result, overlay = true, showMesh = 
     }
     ctx.stroke();
   }
-  ctx.fillStyle = showMesh ? "rgba(250,223,126,.76)" : "#f3d76f";
-  const radius = showMesh ? .7 : 1.3;
-  for (const p of result.landmarks) {
-    ctx.beginPath(); ctx.arc(left+p.x*rw,top+p.y*rh,radius,0,Math.PI*2);ctx.fill();
+  if(overlay){
+    ctx.fillStyle = showMesh ? "rgba(250,223,126,.76)" : "#f3d76f";
+    const radius = showMesh ? .7 : 1.3;
+    for(const p of result.landmarks){
+      ctx.beginPath();ctx.arc(left+p.x*rw,top+p.y*rh,radius,0,Math.PI*2);ctx.fill();
+    }
+  }
+  if(showRegions){
+    const regions=result.topology?.regions||{};
+    for(const [name,color] of [["leftEye","#ffce75"],["rightEye","#ffce75"],["lips","#76f5dd"]]){
+      const edges=regions[name]||[];
+      if(!edges.length)continue;
+      ctx.strokeStyle=color;ctx.lineWidth=2.2;ctx.beginPath();
+      for(const [a,b] of edges){
+        const p=result.landmarks[a],q=result.landmarks[b];
+        if(!p||!q)continue;
+        ctx.moveTo(left+p.x*rw,top+p.y*rh);
+        ctx.lineTo(left+q.x*rw,top+q.y*rh);
+      }
+      ctx.stroke();
+    }
   }
 }
 
