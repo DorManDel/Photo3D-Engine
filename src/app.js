@@ -23,23 +23,30 @@ function disposeViewer(){
   viewerGeneration++;
   const old=texturedViewer; texturedViewer=null; texturedLoading=null;
   old?.dispose();
+  nodes.mesh3d.dataset.state="disposed";
   nodes.exportPng.disabled=true;
 }
 async function ensureTexturedViewer(){
   if(texturedViewer || texturedLoading || !result || !image || !isTexturedMode())return;
   const version=++viewerGeneration;
   const activeImage=image, activeResult=result;
+  nodes.mesh3d.dataset.state="loading-module:"+version;
   nodes.exportPng.disabled=true;
   nodes.meshStats.textContent="Loading Three.js textured mesh…";
   texturedLoading=(async()=>{
     const {createTexturedViewer}=await import("./renderers/three-textured.js");
+    nodes.mesh3d.dataset.state="module-loaded:"+version;
     if(version!==viewerGeneration || !isTexturedMode() || result!==activeResult) return;
+    nodes.mesh3d.dataset.state="creating-webgl:"+version;
     const candidate=await createTexturedViewer(nodes.mesh3d);
+    nodes.mesh3d.dataset.state="webgl-created:"+version;
     if(version!==viewerGeneration || !isTexturedMode() || result!==activeResult){
       candidate.dispose();return;
     }
     try{
+      nodes.mesh3d.dataset.state="building-mesh:"+version;
       const model=candidate.setModel(activeImage,activeResult);
+      nodes.mesh3d.dataset.state="mesh-ready:"+version;
       texturedViewer=candidate;
       texturedViewer.setView(viewerSettings());
       nodes.meshStats.textContent=model.triangles+" textured triangles · "+model.textureWidth+"×"+model.textureHeight+" px";
@@ -51,6 +58,7 @@ async function ensureTexturedViewer(){
     if(version===viewerGeneration){
       nodes.mode.value="wireframe";
       nodes.exportPng.disabled=true;
+      nodes.mesh3d.dataset.state="failed:"+version;
       status("Textured mode unavailable: "+(error?.message||String(error))+". Wireframe remains usable.");
       redraw();
     }
@@ -236,3 +244,6 @@ addEventListener("pagehide",()=>{
   if(objectUrl)URL.revokeObjectURL(objectUrl);
 });
 redraw();
+
+// Safe development diagnostics: stage only, no user image data or landmark data exposed.
+window.photo3dStatus=()=>({stage:nodes.mesh3d.dataset.state||"idle",generation:viewerGeneration,loading:!!texturedLoading,ready:!!texturedViewer,mode:nodes.mode.value});
