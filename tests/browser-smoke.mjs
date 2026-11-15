@@ -109,7 +109,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
         assert.ok(output.topology.regions.leftEye.length>0,"Real left eye edges");
         assert.ok(output.topology.regions.rightEye.length>0,"Real right eye edges");
         assert.ok(output.topology.regions.lips.length>0,"Real mouth edges");
-        await page.locator("#faceRegions").check();
+        await page.locator("#featureRegions").check();
         assert.match(await page.locator("#surfaceAudit").textContent(),/[0-9]+ open edges/);
         const initial=await page.evaluate(()=>window.photo3dStatus().render);
         assert.ok(initial.report.boundaryEdges>0,"Real open mesh boundaries");
