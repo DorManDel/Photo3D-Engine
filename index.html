@@ -30,23 +30,29 @@
 
     <div class="workbench">
       <section class="panel" aria-labelledby="portrait-heading">
-        <header class="panel-head"><div><p class="eyebrow">01 / INPUT + FEATURES</p><h2 id="portrait-heading">Portrait</h2></div><div class="panel-controls"><label class="toggle"><input id="landmarks" type="checkbox" checked> Landmarks</label><label class="toggle"><input id="portraitMesh" type="checkbox"> Mesh overlay</label></div></header>
+        <header class="panel-head"><div><p class="eyebrow">01 / INPUT + FEATURES</p><h2 id="portrait-heading">Portrait</h2></div><div class="panel-controls"><label class="toggle"><input id="landmarks" type="checkbox" checked> Landmarks</label><label class="toggle"><input id="portraitMesh" type="checkbox"> Mesh overlay</label><label class="toggle"><input id="featureRegions" type="checkbox"> Eyes + lips</label></div></header>
         <div class="stage"><canvas id="portrait" width="640" height="480" role="img" aria-label="Imported portrait with optional detected facial landmarks"></canvas><div id="portrait-empty" class="empty">Upload an image to display your portrait.</div></div>
         <p class="caption">Overlay connects real detected points using the official MediaPipe face topology, without inventing facial geometry.</p>
       </section>
       <section class="panel" aria-labelledby="inspect-heading">
         <header class="panel-head"><div><p class="eyebrow">02 / GEOMETRY INSPECTOR</p><h2 id="inspect-heading">Textured face inspector</h2></div><span class="pill" id="provenance">NO MODEL OUTPUT</span></header>
-        <div class="inspector-toolbar"><label for="inspectorMode">Display <select id="inspectorMode"><option value="texture">Textured mesh</option><option value="texture-wireframe">Texture + wireframe</option><option value="wireframe">Wireframe</option><option value="points">Points</option><option value="contours">Contours</option></select></label><button type="button" class="secondary" id="resetView">Reset view</button><span id="meshStats" class="measure">Analyze to inspect mesh</span></div>
+        <div class="inspector-toolbar"><label for="inspectorMode">Display <select id="inspectorMode"><option value="texture">Textured mesh</option><option value="texture-wireframe">Texture + wireframe</option><option value="wireframe">Wireframe</option><option value="points">Points</option><option value="contours">Contours</option></select></label>
+        <label for="wireStyle">Wireframe
+          <select id="wireStyle"><option value="surface">Visible surface</option><option value="xray">X-Ray</option><option value="borders">Open borders</option></select>
+        </label>
+        <button type="button" class="secondary" id="frontCheck" disabled aria-pressed="false">Compare 0°</button>
+        <button type="button" class="secondary" id="resetView">Reset view</button><span id="meshStats" class="measure">Analyze to inspect mesh</span></div>
         <div class="stage points" id="inspectorStage"><canvas id="cloud" width="640" height="480" role="img" aria-label="Drag to orbit MediaPipe's relative face topology"></canvas>
           <div id="mesh3d" class="mesh3d" hidden aria-label="Three.js textured face surface"></div>
           <div id="referenceCompare" class="reference-compare" hidden><canvas id="referenceCrop" width="148" height="148" role="img" aria-label="Original photo face crop"></canvas><span>ORIGINAL</span></div><div id="cloud-empty" class="empty">Real detected points will appear here.</div></div>
-        <p class="drag-hint">Drag to orbit · Pinch to zoom · Compare with the original crop in the corner. Large rotations reveal missing information.</p>
+        <p class="drag-hint">Drag to orbit · Pinch to zoom · Compare 0° flattens relative Z and enlarges the original crop. Borders show real open mesh edges.</p>
+        <p id="surfaceAudit" class="surface-audit" aria-live="polite">Analyze a face to inspect its mesh boundaries.</p>
         <div class="sliders"><label>Yaw <output id="yawValue" for="yaw">0°</output><input type="range" id="yaw" min="-70" max="70" value="0"></label>
         <label>Pitch <output id="pitchValue" for="pitch">0°</output><input type="range" id="pitch" min="-50" max="50" value="0"></label>
         <label>Zoom <output id="zoomValue" for="zoom">1.0×</output><input type="range" id="zoom" min="0.6" max="2.2" step="0.1" value="1"></label>
         <label>Relative Z <output id="depthValue" for="depth">1.0×</output><input type="range" id="depth" min="0" max="2" step="0.1" value="1"></label></div>
         <p id="angleWarning" class="angle-warning" hidden>Large rotation: the source photograph contains no information about hidden facial surfaces.</p>
-        <p class="caption">The original pixels are UV-mapped to <strong>official MediaPipe triangles</strong>. Relative Z controls surface bending. No depth model, hidden-side reconstruction, segmentation or eyelid animation yet.</p>
+        <p class="caption">Real image pixels on official MediaPipe triangles. <strong>Open borders</strong> reveal gaps; highlighted eye/lip contours are model landmarks, not reconstructed eyeballs. Relative Z isn't measured depth; eye fills, mouth rig, hair segmentation and occlusion remain future modules.</p>
       </section>
     </div>
     <section class="disclosure" aria-label="Technical boundaries">
