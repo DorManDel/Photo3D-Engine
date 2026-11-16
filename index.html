@@ -136,6 +136,37 @@
           </div>
         </div>
       </section>
+      <section class="studio-card research-import" aria-labelledby="research-import-title">
+        <div class="studio-card-top">
+          <div><p class="eyebrow">M1C / OFFLINE MODEL BRIDGE · REAL OUTPUT ONLY</p><h3 id="research-import-title">MICA Head Reconstruction — Import & Inspect</h3></div>
+          <span class="status-chip state-research">LOCAL GPU RUNNER</span>
+        </div>
+        <p class="muted">MICA is a separate, <strong>non-commercial research model</strong>, not installed in this GitHub Pages website. Run the licensed official model on your CUDA PC using our checked wrapper, then import the actual <code>mesh.obj</code> here. This uses <strong>different head geometry</strong> from the existing MediaPipe 2.5D mask.</p>
+        <div class="research-steps">
+          <div><b>01 · Install</b><span>MICA + separately licensed FLAME/InsightFace weights on your local GPU PC</span></div>
+          <div><b>02 · Run</b><span>Use <code>tools/mica/run_mica.py</code> to invoke the real upstream inference</span></div>
+          <div><b>03 · Inspect</b><span>Import real <code>subject/mesh.obj</code>; orbit in 3D and compare with the face mask above</span></div>
+          <div><b>04 · Export</b><span>Convert imported untextured head geometry into GLB for Blender inspection</span></div>
+        </div>
+        <div class="studio-actions"><a class="research-document-link" href="./docs/MICA_RUNNER.md" target="_blank" rel="noopener noreferrer">Open MICA setup &amp; run instructions ↗</a></div>
+        <div class="research-upload">
+          <label for="mica-obj-file">Import MICA result (.obj)
+            <input id="mica-obj-file" type="file" accept=".obj" aria-describedby="mica-import-hint">
+          </label>
+          <p id="mica-import-hint" class="fine-print">Local-only import. We check mesh structure, not the identity or cryptographic origin of the file. Do not load third-party models you lack permission to use.</p>
+        </div>
+        <div class="studio-actions"><button type="button" class="secondary" id="mica-export-glb" disabled>↓ Export imported mesh (.glb)</button><button type="button" class="secondary" id="mica-clear">Clear imported mesh</button></div>
+        <div class="live-status" id="mica-import-status" role="status" aria-live="polite">Import a local MICA mesh.obj produced by the official offline runner.</div>
+        <div class="baseline-layout research-layout" id="mica-import-result" hidden>
+          <div class="baseline-viewer-wrap">
+            <div id="mica-viewport" class="baseline-viewer mica-viewport" aria-label="Imported local research mesh, drag to rotate"></div>
+            <p class="drag-hint">Drag to orbit · Pinch or wheel to zoom · Separate from the MediaPipe viewer above.</p>
+          </div>
+          <div class="baseline-report"><h4>Actual imported mesh report</h4><div id="mica-import-metrics"></div>
+            <p class="fine-print">MICA demo OBJ usually contains an untextured facial shape in millimeters. Preview converts to meters; this file is <strong>not a full head, photo texture or rigged Avatar</strong>. Website does not execute MICA or claim to verify the uploaded model's provenance.</p>
+          </div>
+        </div>
+      </section>
       <section class="studio-card studio-process" aria-label="Reconstruction development pipeline">
         <h3>03 · How a real reconstruction will work</h3>
         <div class="process-steps">
@@ -145,7 +176,7 @@
           <div><b>04</b><strong>Normalize</strong><span>Mesh, parameters, scale, confidence</span></div>
           <div><b>05</b><strong>Inspect</strong><span>0° / 30° / 60° comparisons</span></div>
         </div>
-        <p class="fine-print">The runnable MediaPipe baseline now covers local inference, validated 2.5D geometry, WebGL preview and textured GLB export. Preprocessing for MICA/DECA, full-head reconstruction, multi-view fusion, standardized rigging and benchmark comparisons are still separate milestones.</p>
+        <p class="fine-print">MediaPipe baseline runs in the browser and exports textured 2.5D GLB. Separate MICA adapter now invokes actual offline research inference (only with licensed model assets), whose untextured OBJ can be inspected here. DECA, multi-view fusion, production-ready skin, expressions and rigging are still separate milestones.</p>
       </section>
     </section>
 
