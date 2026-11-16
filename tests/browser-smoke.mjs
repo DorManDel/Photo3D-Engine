@@ -43,7 +43,68 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       assert.equal(capture.inference.executed,false);
       assert.equal(capture.privacy.imagesIncluded,false);
       assert.ok(!JSON.stringify(capture).includes("test-person.jpg"));
+
+      // M1b: actual browser inference, real WebGL mesh, and downloadable glTF 2.0 GLB.
+      assert.equal(await page.locator("#run-baseline").isEnabled(),true);
+      await page.locator("#run-baseline").click();
+      await page.waitForFunction(()=>{
+        const status=window.photo3dStudioStatus?.().baseline;
+        return status?.state==="ready" || status?.state==="error";
+      },null,{timeout:90000});
+      const live=await page.evaluate(()=>window.photo3dStudioStatus().baseline);
+      assert.equal(live.state,"ready",await page.locator("#baseline-status").textContent());
+      assert.ok(live.triangleCount>700,"Real model must generate official triangles");
+      assert.equal(live.gpuReady,true);
+      assert.deepEqual(live.viewsUsed,["front"]);
+      assert.equal(await page.locator("#baseline-result").isVisible(),true);
+      assert.ok((await page.locator("#baseline-viewer canvas").count())===1);
+      assert.match(await page.locator("#baseline-metrics").textContent(),/Relative depth/);
+      assert.equal(await page.locator("#download-baseline-glb").isEnabled(),true);
+      await page.locator("#baseline-wire").check();
+      await page.locator("#baseline-yaw").evaluate(el=>{el.value="15";el.dispatchEvent(new Event("input",{bubbles:true}));});
+      const glbPromise=page.waitForEvent("download");
+      await page.locator("#download-baseline-glb").click();
+      const glb=await glbPromise;
+      assert.equal(glb.suggestedFilename(),"photo3d-mediapipe-partial-face.glb");
+      const glbBinary=await readFile(await glb.path());
+      assert.ok(glbBinary.length>20000,"GLB should contain real vertices and photo texture");
+      assert.equal(glbBinary.readUInt32LE(0),0x46546c67,"glTF 2.0 GLB header");
+      assert.equal(glbBinary.readUInt32LE(4),2);
+      assert.equal(glbBinary.readUInt32LE(8),glbBinary.length);
+      assert.equal(glbBinary.toString("ascii",16,20),"JSON");
+      const jsonLength=glbBinary.readUInt32LE(12);
+      const scene=JSON.parse(glbBinary.subarray(20,20+jsonLength).toString("utf8").trim());
+      assert.ok(scene.meshes.length>=1);
+      assert.ok(scene.accessors.length>=3);
+      assert.ok(scene.images?.length>0,"GLB must embed the actual source image texture");
+      assert.equal(scene.skins,undefined,"No fabricated skeleton");
+      assert.equal(scene.animations,undefined,"No fake animation");
+      assert.ok(scene.meshes[0].primitives[0].attributes.POSITION>=0);
+      // Parse the exact downloaded binary again with Three.js's official loader.
+      // This detects broken texture/geometry layouts even when JSON headers look valid.
+      const roundTrip=await page.evaluate(async base64=>{
+        const bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+        const {GLTFLoader}=await import("three/addons/loaders/GLTFLoader.js");
+        const asset=await new GLTFLoader().parseAsync(bytes.buffer,"");
+        let triangleFaces=0,meshCount=0,hasTexture=false,hasRig=false;
+        asset.scene.traverse(obj=>{
+          if(obj.isMesh){
+            meshCount++;
+            triangleFaces+=obj.geometry.index?.count/3 || 0;
+            hasTexture=hasTexture || Boolean(obj.material?.map);
+          }
+          if(obj.isSkinnedMesh)hasRig=true;
+        });
+        return {meshCount,triangleFaces,hasTexture,hasRig};
+      },glbBinary.toString("base64"));
+      assert.ok(roundTrip.meshCount>=1 && roundTrip.triangleFaces>700,"GLB round-trips through official loader");
+      assert.equal(roundTrip.hasTexture,true,"UV texture survives serialization");
+      assert.equal(roundTrip.hasRig,false,"No fabricated skinning");
+      assert.match(await page.locator("#baseline-status").textContent(),/GLB saved/);
+
       await page.locator("#clear-captures").click();
+      assert.equal(await page.locator("#baseline-result").isVisible(),false);
+      assert.equal(await page.locator("#run-baseline").isDisabled(),true);
       assert.equal(await page.locator("#download-capture-plan").isDisabled(),true);
       await page.locator("#tab-guide").click();
       assert.equal(await page.locator("#view-guide").isVisible(),true);

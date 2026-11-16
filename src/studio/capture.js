@@ -25,8 +25,8 @@ export function evaluateCapture(slots){
     message:!slots?.front
       ? "Start with a front-facing picture."
       : present.length===1
-        ? "Single-image research set ready. Add side views to compare results later."
-        : "Multi-view reference set prepared; no 3D inference has run."
+        ? "Front image ready for a real MediaPipe 2.5D baseline; add other views for future comparison."
+        : "Multi-view references ready; the browser baseline uses ONLY the front photo, not multi-view fusion."
   };
 }
 export function buildCapturePlan(slots,{heightCm=null,selectedProvider="mica"}={}){

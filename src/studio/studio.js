@@ -1,5 +1,6 @@
 import { PROVIDERS, getProvider } from "./model-catalog.js";
 import { CAPTURE_SLOTS, validateCaptureFile, evaluateCapture, buildCapturePlan } from "./capture.js";
+import { setupReconstructionBaseline } from "./studio-reconstruction.js";
 
 const $=id=>document.getElementById(id);
 const tabs=[...document.querySelectorAll("[data-view-target]")];
@@ -8,6 +9,10 @@ let activeView="lab",selectedProvider="mica";
 const captures=Object.create(null);
 const generations=Object.create(null);
 const urls=Object.create(null);
+const reconstruction=setupReconstructionBaseline({
+  getFrontImageUrl:()=>urls.front||null,
+  getReferenceCount:()=>evaluateCapture(captures).imageCount
+});
 
 function viewFromHash(){
   const view=location.hash.replace(/^#\/?/,"").trim();
@@ -108,9 +113,11 @@ async function assignCapture(slot,file){
     const width=image.naturalWidth,height=image.naturalHeight;
     if(!width||!height||width*height>24_000_000)throw Error("Image must be under 24 MP.");
     if(urls[slot])URL.revokeObjectURL(urls[slot]);
+    if(slot==="front")reconstruction.reset();
     urls[slot]=url;
     captures[slot]={width,height,size:file.size,type:file.type};
     showCapture(slot,file,url,width,height);
+    reconstruction.onInputChanged();
     updateCaptureStatus();
   }catch(e){
     URL.revokeObjectURL(url);
@@ -124,6 +131,7 @@ for(const slot of CAPTURE_SLOTS){
   });
 }
 function clearCaptures(){
+  reconstruction.reset();
   for(const slot of CAPTURE_SLOTS){
     const key=slot.id;
     generations[key]=(generations[key]||0)+1;
@@ -135,6 +143,7 @@ function clearCaptures(){
     $("meta-"+key).textContent=key==="front"?"No photo selected":"Optional reference";
   }
   $("capture-height").value="";
+  reconstruction.onInputChanged();
   updateCaptureStatus("Photos cleared. No data was uploaded.");
 }
 $("clear-captures").addEventListener("click",clearCaptures);
@@ -157,5 +166,6 @@ addEventListener("pagehide",()=>{
 window.photo3dStudioStatus=()=>({
   activeView,selectedProvider,
   imageSlots:CAPTURE_SLOTS.filter(slot=>Boolean(captures[slot.id])).map(slot=>slot.id),
-  inferenceExecuted:false
+  inferenceExecuted:reconstruction.status().ready,
+  baseline:reconstruction.status()
 });
