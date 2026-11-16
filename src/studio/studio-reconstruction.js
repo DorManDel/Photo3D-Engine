@@ -28,6 +28,45 @@ export function setupReconstructionBaseline({getFrontImageUrl,getReferenceCount}
     });
   }
   for(const item of Object.values(controls))item.addEventListener("input",setView);
+  // Gesture behavior mirrors the original Photo Lab; no continuous render loop.
+  const touches=new Map();
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const pinch=()=>{
+    const [a,b]=[...touches.values()];
+    return a&&b?Math.hypot(b.x-a.x,b.y-a.y):null;
+  };
+  let lastPinch=null;
+  viewerRoot.addEventListener("pointerdown",event=>{
+    if(!viewer)return;
+    touches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    viewerRoot.setPointerCapture(event.pointerId);
+    lastPinch=touches.size>1?pinch():null;
+  });
+  viewerRoot.addEventListener("pointermove",event=>{
+    if(!touches.has(event.pointerId)||!viewer)return;
+    const old=touches.get(event.pointerId);
+    touches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(touches.size>=2){
+      const d=pinch();
+      if(d && lastPinch){
+        controls.zoom.value=String(clamp(Number(controls.zoom.value)*d/lastPinch,.6,2.2));
+      }
+      lastPinch=d;
+    }else{
+      const rect=viewerRoot.getBoundingClientRect();
+      controls.yaw.value=String(clamp(Number(controls.yaw.value)+160*(event.clientX-old.x)/Math.max(1,rect.width),-65,65));
+      controls.pitch.value=String(clamp(Number(controls.pitch.value)-100*(event.clientY-old.y)/Math.max(1,rect.height),-40,40));
+    }
+    setView();
+  });
+  function stopPointer(event){touches.delete(event.pointerId);lastPinch=touches.size>1?pinch():null;}
+  for(const event of ["pointerup","pointercancel","lostpointercapture"])viewerRoot.addEventListener(event,stopPointer);
+  viewerRoot.addEventListener("wheel",event=>{
+    if(!viewer)return;
+    event.preventDefault();
+    controls.zoom.value=String(clamp(Number(controls.zoom.value)+(event.deltaY>0?-.1:.1),.6,2.2));
+    setView();
+  },{passive:false});
   function reportRow(label,text){
     const row=document.createElement("div");row.className="metric-row";
     const name=document.createElement("strong"),value=document.createElement("span");
@@ -42,7 +81,7 @@ export function setupReconstructionBaseline({getFrontImageUrl,getReferenceCount}
       reportRow("Mesh triangles",data.surface.triangleCount),
       reportRow("Open boundaries",data.audit.boundaryEdgeCount+" edges / "+data.audit.boundaryComponents+" components"),
       reportRow("Relative depth","MediaPipe Z · not measured in cm"),
-      reportRow("Inference + geometry time",Math.round(elapsedMs)+" ms on this device"),
+      reportRow("Analysis elapsed",Math.round(elapsedMs)+" ms · includes first model load"),
       reportRow("Asset kind","Textured partial-face 2.5D · no rig")
     );
   }
@@ -54,6 +93,7 @@ export function setupReconstructionBaseline({getFrontImageUrl,getReferenceCount}
   function reset(){
     serial++;
     viewer?.dispose();viewer=null;baseline=null;
+    touches.clear();lastPinch=null;
     running=false;exporting=false;pane.hidden=true;
     metrics.replaceChildren();viewerRoot.replaceChildren();
     controls.yaw.value="0";controls.pitch.value="0";controls.zoom.value="1";controls.wire.checked=false;
