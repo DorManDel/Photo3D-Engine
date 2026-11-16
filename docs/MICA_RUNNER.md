@@ -22,6 +22,17 @@ We first inspect the result independently, then compare it against the
 browser baseline. A visual similarity comparison is not yet a numerical
 identity/geometry benchmark.
 
+## First: read-only WSL / GPU readiness check
+
+For Windows 11 + RTX 4080 Super, run our
+[WSL Step 1 guide](MICA_WSL_STEP1.md) and
+`bash ~/Photo3D-Engine/tools/mica/diagnose_wsl.sh`
+**before installing MICA's conda environment**.
+The upstream `environment.yml` pins CUDA 11.6 / PyTorch 1.13;
+Ada compute capability 8.9 first gained native toolkit support in CUDA 11.8.
+Use a separate, vetted environment rather than assuming this old lockfile
+will run on Ada. The check only reads system information.
+
 ## 0. Legal, security and hardware prerequisites
 
 - MICA code/model: non-commercial peaceful scientific research, education

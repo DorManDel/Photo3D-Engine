@@ -15,6 +15,8 @@ jobs:
           node-version: 22
       - name: Build pure-ESM geometry package
         run: node scripts/build-face-surface-package.mjs
+      - name: Syntax-check read-only WSL diagnostic
+        run: bash -n tools/mica/diagnose_wsl.sh
       - run: node --test tests/*.test.mjs
       - name: Offline Python MICA bridge contract tests (no weights, no GPU)
         run: python3 -m unittest discover -s tests -p 'test_*.py'

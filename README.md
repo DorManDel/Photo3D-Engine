@@ -20,7 +20,7 @@ that a file really came from MICA. Neither the OBJ import nor synthetic
 contract test fixtures are evidence of MICA inference. No new model is
 silently substituted for it.
 
-**Start here:** [Run MICA locally and inspect a real mesh](docs/MICA_RUNNER.md).
+**Start with WSL GPU readiness:** [non-destructive Windows/WSL Step 1](docs/MICA_WSL_STEP1.md), then [run MICA locally and inspect a real mesh](docs/MICA_RUNNER.md).
 Before using the MICA software/model or FLAME2020, read their restrictive
 non-commercial licences. Do not use the upstream password-based
 insecure-`wget` installer without security review.
