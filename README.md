@@ -2,6 +2,18 @@
 
 A **modular, local-first portrait-analysis toolkit**. The browser lab combines **real MediaPipe face landmarks and original-image UV texturing**. It is a diagnostic 2.5D surface, not a reconstructed head or animated portrait.
 
+## Milestone M1 — modular Avatar Studio workspaces
+
+New top-level tabs preserve the working Photo Lab and add independent **Reconstruction**, **Motion**, **Export**, and **Developer Guide** workspaces.
+
+- **Reconstruction Studio (M1a):** prepare up to four local reference photos, inspect their dimensions, select a research candidate (MICA, DECA, MediaPipe baseline or SAM 3D Body), and export a metadata-only capture plan JSON. This is **not** MICA/DECA inference, a photo upload, a generated mesh, or a working full-body model.
+- **Motion Lab:** explicit blueprint for opt-in camera tracking and rig retargeting; no webcam access is requested.
+- **Export Studio:** realistic readiness matrix. Current exports are landmarks JSON and mesh snapshot PNG, not GLB/FBX/VRM.
+- **Developer Guide:** simple programming explanations of landmarks, UVs, model adapters, rigging and file formats.
+- Independent static modules: `src/studio/studio.js`, `src/studio/capture.js`, `src/studio/model-catalog.js`; the original face engine is unchanged.
+
+Read [the detailed developer and milestone plan](docs/RECONSTRUCTION_STUDIO.md). Actual MICA/DECA inference requires an isolated reviewed GPU/Python adapter, model-asset access and **non-commercial license checks**. Do not claim the research candidates run in this browser.
+
 ## Run without npm or a personal server
 
 **Live beta:** https://dormandel.github.io/Photo3D-Engine/ — already deployed via GitHub Pages from `main`. Browser and model inference checks passed against the hosted URL. No CLI, npm, or Python backend is needed to use this pilot.
