@@ -19,6 +19,42 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
     await page.goto(process.env.PHOTO3D_BASE_URL || "http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
     assert.match(await page.title(), /Photo3D Lab/);
     const buffer = await readFile("/tmp/photo3d-reference.jpg");
+    // M1 studio E2E: no fake inference and no photo data in the exported plan.
+    if(!process.env.PHOTO3D_BASE_URL) {
+      await page.locator("#tab-reconstruction").click();
+      assert.equal(await page.locator("#view-lab").isVisible(),false);
+      assert.equal(await page.locator("#view-reconstruction").isVisible(),true);
+      assert.equal(await page.locator("#tab-reconstruction").getAttribute("aria-selected"),"true");
+      assert.equal(await page.locator("#download-capture-plan").isDisabled(),true);
+      await page.locator('[data-provider="deca"]').click();
+      assert.match(await page.locator("#provider-detail").textContent(),/not installed/i);
+      await page.locator("#capture-front").setInputFiles({name:"test-person.jpg",mimeType:"image/jpeg",buffer});
+      await page.waitForFunction(()=>window.photo3dStudioStatus?.().imageSlots.includes("front"));
+      assert.equal(await page.locator("#download-capture-plan").isEnabled(),true);
+      await page.locator("#capture-height").fill("183");
+      const capturePromise=page.waitForEvent("download");
+      await page.locator("#download-capture-plan").click();
+      const captureFile=await capturePromise;
+      const capture=JSON.parse(await readFile(await captureFile.path(),"utf8"));
+      assert.equal(capture.schema,"photo3d.capture-plan.v1");
+      assert.equal(capture.optionalHumanHeightCm,183);
+      assert.equal(capture.selectedResearchProvider,"deca");
+      assert.equal(capture.images.length,1);
+      assert.equal(capture.inference.executed,false);
+      assert.equal(capture.privacy.imagesIncluded,false);
+      assert.ok(!JSON.stringify(capture).includes("test-person.jpg"));
+      await page.locator("#clear-captures").click();
+      assert.equal(await page.locator("#download-capture-plan").isDisabled(),true);
+      await page.locator("#tab-guide").click();
+      assert.equal(await page.locator("#view-guide").isVisible(),true);
+      await page.locator("#tab-motion").click();
+      assert.match(await page.locator("#view-motion").textContent(),/NOT CONNECTED/);
+      await page.locator("#tab-export").click();
+      assert.match(await page.locator("#view-export").textContent(),/GLB/);
+      await page.locator("#tab-lab").click();
+      assert.equal(await page.locator("#view-lab").isVisible(),true);
+      assert.equal(await page.evaluate(()=>window.photo3dStudioStatus()?.inferenceExecuted),false);
+    }
     const sample = page.locator("#sample");
     // Remote PR tests may run against the currently deployed earlier revision.
     if (await sample.count()) {

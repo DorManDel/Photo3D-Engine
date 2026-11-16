@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0e1020">
-  <meta name="description" content="Photo3D Lab: real face-landmark analysis and an honest relative-3D inspector.">
+  <meta name="description" content="Photo3D Engine: modular portrait lab, reconstruction research studio, motion roadmap and developer guide.">
   <title>Photo3D Lab • Textured 2.5D Face</title>
   <link rel="stylesheet" href="./styles.css">
   <script type="module" src="./src/app.js"></script>
+  <script type="module" src="./src/studio/studio.js"></script>
+  <link rel="stylesheet" href="./src/studio/studio.css">
 </head>
 <body>
   <main class="shell">
@@ -18,6 +20,14 @@
       <a class="link" href="https://github.com/DorManDel/Photo3D-Engine" target="_blank" rel="noopener noreferrer">Source ↗</a>
     </header>
 
+    <nav class="studio-nav" aria-label="Photo3D workspaces" role="tablist">
+      <button class="studio-tab" type="button" role="tab" id="tab-lab" data-view-target="lab" aria-controls="view-lab" aria-selected="true">◈ Photo Lab <small>WORKING</small></button>
+      <button class="studio-tab" type="button" role="tab" id="tab-reconstruction" data-view-target="reconstruction" aria-controls="view-reconstruction" aria-selected="false">◇ Reconstruction <small>M1</small></button>
+      <button class="studio-tab" type="button" role="tab" id="tab-motion" data-view-target="motion" aria-controls="view-motion" aria-selected="false">◌ Motion Lab <small>PLANNED</small></button>
+      <button class="studio-tab" type="button" role="tab" id="tab-export" data-view-target="export" aria-controls="view-export" aria-selected="false">⇧ Export Studio <small>PLANNED</small></button>
+      <button class="studio-tab" type="button" role="tab" id="tab-guide" data-view-target="guide" aria-controls="view-guide" aria-selected="false">ⓘ Developer Guide</button>
+    </nav>
+    <section id="view-lab" class="studio-view" role="tabpanel" tabindex="0" aria-labelledby="tab-lab">
     <section class="toolbar" aria-label="Portrait controls">
       <label class="file"><span>Choose a portrait</span><input type="file" id="upload" accept="image/png,image/jpeg,image/webp" aria-describedby="privacy"></label>
       <button id="sample" type="button">Use portfolio sample</button>
@@ -58,6 +68,104 @@
     <section class="disclosure" aria-label="Technical boundaries">
       <strong>What's real?</strong> Detected landmarks, official triangles, the original photo texture and Three.js rendering. <strong>What's not here?</strong> AI-estimated depth, hair/neck segmentation, hidden head surfaces or realistic blinking.
       <p>Model assets are downloaded on first analysis. Device speed, browser support and network access affect success. We never quietly substitute a simulated result.</p>
+    </section>
+    </section>
+
+    <section id="view-reconstruction" class="studio-view" role="tabpanel" tabindex="0" aria-labelledby="tab-reconstruction" hidden>
+      <header class="studio-heading">
+        <p class="eyebrow">MILESTONE 01 / INPUT &amp; RECONSTRUCTION RESEARCH</p>
+        <h2>Reconstruction Studio</h2>
+        <p>Prepare one or more reference photos, compare reconstruction approaches, and export a privacy-safe capture plan. <strong>No head reconstruction runs in this tab yet.</strong></p>
+      </header>
+      <div class="studio-grid">
+        <section class="studio-card" aria-labelledby="capture-heading">
+          <div class="studio-card-top"><h3 id="capture-heading">01 · Capture references</h3><span class="status-chip state-local">LOCAL ONLY</span></div>
+          <p class="muted">Start with a front portrait. More views will help us compare future reconstruction pipelines; this is not multi-view inference yet.</p>
+          <div class="capture-grid">
+            <label class="capture-tile" for="capture-front"><strong>Front <span>Required</span></strong><span>Neutral expression · good light</span><img class="capture-preview" id="preview-front" alt="Front reference preview" hidden><input id="capture-front" data-capture-slot="front" type="file" accept="image/jpeg,image/png,image/webp"><em id="meta-front">No photo selected</em></label>
+            <label class="capture-tile" for="capture-left"><strong>Left ¾</strong><span>Approx. 30–45° turn</span><img class="capture-preview" id="preview-left" alt="Left three-quarter reference preview" hidden><input id="capture-left" data-capture-slot="left" type="file" accept="image/jpeg,image/png,image/webp"><em id="meta-left">Optional reference</em></label>
+            <label class="capture-tile" for="capture-right"><strong>Right ¾</strong><span>Opposite side for comparison</span><img class="capture-preview" id="preview-right" alt="Right three-quarter reference preview" hidden><input id="capture-right" data-capture-slot="right" type="file" accept="image/jpeg,image/png,image/webp"><em id="meta-right">Optional reference</em></label>
+            <label class="capture-tile" for="capture-profile"><strong>Profile</strong><span>Full side reference, optional</span><img class="capture-preview" id="preview-profile" alt="Side profile reference preview" hidden><input id="capture-profile" data-capture-slot="profile" type="file" accept="image/jpeg,image/png,image/webp"><em id="meta-profile">Optional reference</em></label>
+          </div>
+          <div class="capture-options">
+            <label>Approx. height (cm) <input id="capture-height" type="number" min="100" max="240" step="0.5" placeholder="Optional · future body model"></label>
+            <p class="muted">Height is saved as a reference only. It does <strong>not</strong> calibrate the current face mesh.</p>
+          </div>
+          <p id="capture-status" class="status-line" role="status" aria-live="polite">Start by choosing a front-facing photo. Nothing is uploaded.</p>
+          <div class="studio-actions"><button id="download-capture-plan" type="button" disabled>Export capture plan (.json)</button><button id="clear-captures" type="button" class="secondary">Clear photos</button></div>
+          <p class="fine-print">Images and thumbnails stay in this tab's browser memory. The JSON contains only slot, dimensions, MIME type and file size — never image pixels or filenames.</p>
+        </section>
+        <section class="studio-card" aria-labelledby="model-heading">
+          <div class="studio-card-top"><h3 id="model-heading">02 · Compare model approaches</h3><span class="status-chip state-research">RESEARCH</span></div>
+          <p class="muted">Choose an approach to understand its inputs, output and dependencies. A model card is not a working inference endpoint.</p>
+          <div class="provider-options" id="provider-options" role="group" aria-label="Reconstruction candidates">
+            <button type="button" class="provider-option" data-provider="mica" aria-pressed="true">MICA <small>Face identity</small></button>
+            <button type="button" class="provider-option" data-provider="deca" aria-pressed="false">DECA <small>Detailed expressions</small></button>
+            <button type="button" class="provider-option" data-provider="mediapipe" aria-pressed="false">MediaPipe <small>Current baseline</small></button>
+            <button type="button" class="provider-option" data-provider="sam3dbody" aria-pressed="false">SAM 3D Body <small>Future full body</small></button>
+          </div>
+          <div id="provider-detail" class="provider-detail" aria-live="polite"></div>
+          <div class="benchmark-status"><span class="status-chip state-pending">NOT CONNECTED</span><span>Reconstruction must run in a separate, licensed model adapter before any mesh can be compared here.</span></div>
+          <a class="studio-inline-link" href="https://github.com/DorManDel/Photo3D-Engine/blob/main/docs/PROVIDER_ROADMAP.md" target="_blank" rel="noopener noreferrer">Provider architecture ↗</a>
+        </section>
+      </div>
+      <section class="studio-card studio-process" aria-label="Reconstruction development pipeline">
+        <h3>03 · How a real reconstruction will work</h3>
+        <div class="process-steps">
+          <div><b>01</b><strong>Capture</strong><span>Original local photos</span></div>
+          <div><b>02</b><strong>Preprocess</strong><span>Face crop, alignment, quality</span></div>
+          <div><b>03</b><strong>Model adapter</strong><span>MICA / DECA / other validated model</span></div>
+          <div><b>04</b><strong>Normalize</strong><span>Mesh, parameters, scale, confidence</span></div>
+          <div><b>05</b><strong>Inspect</strong><span>0° / 30° / 60° comparisons</span></div>
+        </div>
+        <p class="fine-print">The first two sections are available for capture planning; preprocessing, reconstruction, normalization and comparison are implementation milestones. We won't fabricate results.</p>
+      </section>
+    </section>
+
+    <section id="view-motion" class="studio-view" role="tabpanel" tabindex="0" aria-labelledby="tab-motion" hidden>
+      <header class="studio-heading"><p class="eyebrow">FUTURE / LIVE CAMERA</p><h2>Avatar Motion Lab</h2><p>Facial motion is a separate problem from reconstructing a person. We can research tracking while rebuilding the avatar independently.</p></header>
+      <div class="studio-grid">
+        <section class="studio-card"><h3>Tracking input</h3><p>Camera frames → MediaPipe Face Landmarker in VIDEO mode → head pose, blink, smile and jaw parameters.</p><span class="status-chip state-pending">NOT CONNECTED</span><p class="muted">No webcam permission or recording is requested by this tab.</p></section>
+        <section class="studio-card"><h3>Avatar motion output</h3><p>Validated coefficients → mapping/retargeting → skeleton, morph targets and eyelid/jaw controls.</p><span class="status-chip state-pending">NO RIG YET</span><p class="muted">We need a real animation-ready model before trying to drive facial expressions.</p></section>
+      </div>
+      <section class="studio-card"><h3>What we'll test</h3><p>Neutral pose, head rotation, deliberate blink, smile, jaw opening and speech movement, with latency and quality measurements. An expression coefficient is not a reliable reading of a person's emotion.</p></section>
+    </section>
+
+    <section id="view-export" class="studio-view" role="tabpanel" tabindex="0" aria-labelledby="tab-export" hidden>
+      <header class="studio-heading"><p class="eyebrow">FUTURE / GAME ENGINE PIPELINE</p><h2>Export &amp; Rig Studio</h2><p>Our target is a reusable asset for Blender, Unity and Unreal — with explicit checks for mesh topology, UVs, armature and animation.</p></header>
+      <div class="studio-card export-matrix">
+        <h3>Format readiness</h3>
+        <div class="format-row"><strong>Landmarks JSON</strong><span>Detected coordinates, topology and provenance</span><span class="status-chip state-ready">WORKING · Photo Lab</span></div>
+        <div class="format-row"><strong>Rendered PNG</strong><span>Snapshot, not a 3D asset</span><span class="status-chip state-ready">WORKING · Photo Lab</span></div>
+        <div class="format-row"><strong>GLB / glTF</strong><span>Mesh + materials first; later skinning and morph targets</span><span class="status-chip state-pending">PLANNED</span></div>
+        <div class="format-row"><strong>FBX</strong><span>Blender/export adapter for Unreal and Unity pipelines</span><span class="status-chip state-pending">PLANNED</span></div>
+        <div class="format-row"><strong>VRM</strong><span>Humanoid avatar with a validated skeleton and expressions</span><span class="status-chip state-pending">PLANNED</span></div>
+      </div>
+      <section class="studio-card"><h3>What “ready to import” must mean</h3><p>A file extension alone is insufficient: units, axis conventions, UVs, materials, skeleton names, skin weights, facial morph targets and animation clips must survive a Blender → Unity/Unreal round trip.</p><p class="muted">Automatic rigging from a photograph is a research goal, not a feature we currently ship.</p></section>
+    </section>
+
+    <section id="view-guide" class="studio-view" role="tabpanel" tabindex="0" aria-labelledby="tab-guide" hidden>
+      <header class="studio-heading"><p class="eyebrow">DEVELOPER GUIDE / LEARN AS WE BUILD</p><h2>How Photo3D actually works</h2><p>A programmer-friendly explanation of the pipeline, the libraries and the limits. All code and API names stay in English.</p></header>
+      <div class="studio-grid">
+        <section class="studio-card"><h3>01 · Image → landmark measurements</h3><p><strong>MediaPipe Face Landmarker</strong> detects image-relative X/Y and relative Z for facial points. These are estimates, not measured head depth. Our current model runs on the device when you explicitly press Analyze.</p></section>
+        <section class="studio-card"><h3>02 · Points → triangle surface</h3><p>We use <strong>official MediaPipe connection groups</strong> to build indexed triangles. A triangle references three known vertices. We never connect random points just to create a face.</p></section>
+        <section class="studio-card"><h3>03 · Photograph → UV texture</h3><p>Each vertex remembers where it came from in the source photograph using <code>u, v</code>. <strong>Three.js</strong> draws image pixels on the triangle surface. Eyes and hidden surfaces remain incomplete.</p></section>
+        <section class="studio-card"><h3>04 · Geometry → real reconstruction</h3><p><strong>MICA</strong> researches identity-focused face shape; <strong>DECA</strong> expression-aware geometry. They require separate Python/GPU dependencies and research license reviews. These models are <strong>not running here yet</strong>.</p></section>
+        <section class="studio-card"><h3>05 · Motion is not reconstruction</h3><p>Webcam tracking estimates pose and expressions. A <strong>rig</strong> is a set of joints/controls in the avatar. <strong>Retargeting</strong> translates tracking values into that rig's naming and coordinate system.</p></section>
+        <section class="studio-card"><h3>06 · Export is a compatibility contract</h3><p><strong>GLB</strong> is a useful first portable mesh target. <strong>VRM</strong> adds a humanoid/expression convention; <strong>FBX</strong> can follow through Blender. None of these formats automatically invent valid skin weights or a working skeleton.</p></section>
+      </div>
+      <section class="studio-card">
+        <h3>What each building block owns</h3>
+        <div class="guide-code"><code>Input Photos → Model Adapter → Geometry Contract → Renderer<br>↘ Metadata &amp; Confidence → Export Adapter → Game Engine<br>Webcam → Motion Adapter → Retargeter → Avatar Rig</code></div>
+        <p>Keeping these modules separate means we can test MICA without rewriting Three.js, or use a new renderer without changing the original image analysis.</p>
+        <details><summary>What is an adapter?</summary><p>A small wrapper that translates one provider's inputs and outputs into our shared, versioned contract. It reports its model/version/license, never silently swaps in fabricated geometry and can be removed without rewriting the interface.</p></details>
+        <details><summary>What is a skeleton / armature?</summary><p>A hierarchy of bones with transformations. Mesh vertices have skin weights that decide how much each bone moves them. Facial expressions can additionally use morph targets (shape keys).</p></details>
+        <details><summary>Why one photo cannot guarantee the back of the head</summary><p>The camera only records visible pixels. A model may infer plausible hidden geometry using learned human-shape priors, but those parts are hypotheses rather than verified measurements.</p></details>
+      </section>
+      <section class="studio-card"><h3>Further reading and source code</h3>
+        <p class="muted">These links describe candidates and formats, not installed features. Verify checkpoint and output redistribution rights before using a model in any product.</p>
+        <div class="source-links"><a href="https://github.com/Zielon/MICA" target="_blank" rel="noopener noreferrer">MICA ↗</a><a href="https://github.com/yfeng95/DECA" target="_blank" rel="noopener noreferrer">DECA ↗</a><a href="https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker" target="_blank" rel="noopener noreferrer">MediaPipe ↗</a><a href="https://github.com/facebookresearch/sam-3d-body" target="_blank" rel="noopener noreferrer">SAM 3D Body ↗</a><a href="https://vrm.dev/en/vrm/vrm_features/" target="_blank" rel="noopener noreferrer">VRM ↗</a><a href="https://github.com/DorManDel/Photo3D-Engine/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">Source architecture ↗</a></div>
+      </section>
     </section>
     <footer><a href="https://dormandel.github.io/MobiLab/" target="_blank" rel="noopener noreferrer">← MobiLab</a> · <a href="https://github.com/DorManDel/Photo3D-Engine" target="_blank" rel="noopener noreferrer">Photo3D source</a></footer>
   </main>
