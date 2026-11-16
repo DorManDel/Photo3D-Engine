@@ -80,6 +80,26 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       assert.equal(scene.skins,undefined,"No fabricated skeleton");
       assert.equal(scene.animations,undefined,"No fake animation");
       assert.ok(scene.meshes[0].primitives[0].attributes.POSITION>=0);
+      // Parse the exact downloaded binary again with Three.js's official loader.
+      // This detects broken texture/geometry layouts even when JSON headers look valid.
+      const roundTrip=await page.evaluate(async base64=>{
+        const bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+        const {GLTFLoader}=await import("three/addons/loaders/GLTFLoader.js");
+        const asset=await new GLTFLoader().parseAsync(bytes.buffer,"");
+        let triangleFaces=0,meshCount=0,hasTexture=false,hasRig=false;
+        asset.scene.traverse(obj=>{
+          if(obj.isMesh){
+            meshCount++;
+            triangleFaces+=obj.geometry.index?.count/3 || 0;
+            hasTexture=hasTexture || Boolean(obj.material?.map);
+          }
+          if(obj.isSkinnedMesh)hasRig=true;
+        });
+        return {meshCount,triangleFaces,hasTexture,hasRig};
+      },glbBinary.toString("base64"));
+      assert.ok(roundTrip.meshCount>=1 && roundTrip.triangleFaces>700,"GLB round-trips through official loader");
+      assert.equal(roundTrip.hasTexture,true,"UV texture survives serialization");
+      assert.equal(roundTrip.hasRig,false,"No fabricated skinning");
       assert.match(await page.locator("#baseline-status").textContent(),/GLB saved/);
 
       await page.locator("#clear-captures").click();
