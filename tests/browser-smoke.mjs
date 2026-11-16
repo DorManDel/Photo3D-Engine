@@ -102,6 +102,46 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       assert.equal(roundTrip.hasRig,false,"No fabricated skinning");
       assert.match(await page.locator("#baseline-status").textContent(),/GLB saved/);
 
+      // M1c research importer TEST FIXTURE: synthetic OBJ; NOT MICA inference.
+      // Only validates official OBJLoader/GLTFExporter interoperability and UI.
+      const syntheticObj=["# synthetic mesh test, not reconstructed by a model"];
+      for(let y=0;y<11;y++)for(let x=0;x<11;x++)
+        syntheticObj.push("v "+x+" "+y+" "+((x*x+y)/100));
+      for(let y=0;y<10;y++)for(let x=0;x<10;x++){
+        const a=y*11+x+1,b=a+1,c=a+11,d=c+1;
+        syntheticObj.push("f "+a+" "+b+" "+c,"f "+b+" "+d+" "+c);
+      }
+      await page.locator("#mica-obj-file").setInputFiles({
+        name:"mesh.obj",mimeType:"text/plain",
+        buffer:Buffer.from(syntheticObj.join("\\n")+"\\n")
+      });
+      await page.waitForFunction(()=>{
+        const s=window.photo3dStudioStatus?.().researchImport?.state;
+        return s==="ready" || s==="error";
+      },null,{timeout:45000});
+      const imported=await page.evaluate(()=>window.photo3dStudioStatus().researchImport);
+      assert.equal(imported.state,"ready",await page.locator("#mica-import-status").textContent());
+      assert.equal(imported.inferenceExecutedHere,false,"Import does not claim MICA ran in the browser");
+      assert.equal(imported.vertices,121);
+      assert.equal(imported.triangles,200);
+      assert.equal(await page.locator("#mica-import-result").isVisible(),true);
+      assert.equal(await page.locator("#mica-viewport canvas").count(),1);
+      const researchPromise=page.waitForEvent("download");
+      await page.locator("#mica-export-glb").click();
+      const researchDownload=await researchPromise;
+      assert.equal(researchDownload.suggestedFilename(),"photo3d-mica-import-untextured.glb");
+      const researchBinary=await readFile(await researchDownload.path());
+      assert.equal(researchBinary.readUInt32LE(0),0x46546c67);
+      const researchJsonLength=researchBinary.readUInt32LE(12);
+      const researchScene=JSON.parse(researchBinary.subarray(20,20+researchJsonLength).toString("utf8").trim());
+      assert.ok(researchScene.meshes.length>0);
+      assert.equal(researchScene.images,undefined,"No fabricated texture added to OBJ");
+      assert.equal(researchScene.skins,undefined,"No fabricated rig added to OBJ");
+      assert.equal(researchScene.animations,undefined,"No fabricated animations");
+      await page.locator("#mica-clear").click();
+      assert.equal(await page.locator("#mica-import-result").isVisible(),false);
+      assert.equal(await page.locator("#mica-export-glb").isDisabled(),true);
+
       await page.locator("#clear-captures").click();
       assert.equal(await page.locator("#baseline-result").isVisible(),false);
       assert.equal(await page.locator("#run-baseline").isDisabled(),true);
