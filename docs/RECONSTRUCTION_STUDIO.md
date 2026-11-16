@@ -114,7 +114,7 @@ MICA produces a face mesh and FLAME parameters, not an automatically textured ri
 
 - The page itself remains static GitHub Pages; no user npm or server required.
 - Model/runtime and Three.js are downloaded when first needed. Actual size/time depends on network/browser; do not promise a fixed duration.
-- MediaPipe inference runs locally on the phone or PC. The UI reports **measured single-run inference + geometry time** (excluding initial asset download and export time); it is not a benchmark of the model's overall accuracy.
+- MediaPipe inference runs locally on the phone or PC. The UI reports **measured single-run inference + geometry time** (including model initialization/download if necessary, but excluding the separate GLB export); it is not a benchmark of the model's overall accuracy.
 - Real GLB filesize scales with the photo texture, bounded to 1024px for the exported asset. Geometry includes only a few hundred vertices and official face triangles.
 - The current pipeline uses exactly **1 front image** even when four were uploaded; the other views are reference data, not consumed by inference.
 - GPU WebGL and Three.js/GLTFExporter need browser support, available memory and connectivity to the pinned CDN.
