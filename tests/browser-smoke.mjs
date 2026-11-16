@@ -58,7 +58,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       assert.deepEqual(live.viewsUsed,["front"]);
       assert.equal(await page.locator("#baseline-result").isVisible(),true);
       assert.ok((await page.locator("#baseline-viewer canvas").count())===1);
-      assert.match(await page.locator("#baseline-metrics").textContent(),/Relative Z/);
+      assert.match(await page.locator("#baseline-metrics").textContent(),/Relative depth/);
       assert.equal(await page.locator("#download-baseline-glb").isEnabled(),true);
       await page.locator("#baseline-wire").check();
       await page.locator("#baseline-yaw").evaluate(el=>{el.value="15";el.dispatchEvent(new Event("input",{bubbles:true}));});
