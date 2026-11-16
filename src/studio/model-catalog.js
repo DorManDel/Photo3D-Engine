@@ -23,7 +23,7 @@ export const PROVIDERS = Object.freeze([
     purpose:"Estimate identity-focused metric face shape from photo(s)",
     input:"1+ face images (research workflow)",
     output:"FLAME parameters + face mesh (research implementation)",
-    runtime:"Separate Python/GPU adapter — not installed",
+    runtime:"Offline research runner code + real OBJ web importer available; licensed Python/CUDA model assets NOT installed",
     status:"research",
     licensing:"Non-commercial scientific/research/education terms; FLAME model access required",
     source:"https://github.com/Zielon/MICA",

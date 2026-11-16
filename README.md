@@ -2,6 +2,29 @@
 
 A **modular, local-first portrait-analysis toolkit**. The browser lab combines **real MediaPipe face landmarks and original-image UV texturing**. It is a diagnostic 2.5D surface, not a reconstructed head or animated portrait.
 
+## Milestone M1c — offline MICA reconstruction bridge
+
+An independent research adapter `tools/mica/run_mica.py` now invokes **the actual
+upstream MICA demo** when executed in a user-provided, licensed CUDA Python
+environment. It checks MICA/FLAME/InsightFace asset paths, stages one local
+image privately, validates the real output `mesh.obj`, and creates a
+`photo3d.research-mesh.v1` metadata manifest. **No model weights, face data,
+FLAME files or credentials are distributed here.** We have not yet run MICA
+inference on the owner's own GPU.
+
+The Reconstruction Studio additionally imports user-supplied triangle OBJ
+meshes using the official Three.js OBJLoader, previews them independently
+of the real MediaPipe 2.5D baseline and exports a separate **untextured GLB**
+through the official GLTFExporter. Structural validation cannot verify
+that a file really came from MICA. Neither the OBJ import nor synthetic
+contract test fixtures are evidence of MICA inference. No new model is
+silently substituted for it.
+
+**Start here:** [Run MICA locally and inspect a real mesh](docs/MICA_RUNNER.md).
+Before using the MICA software/model or FLAME2020, read their restrictive
+non-commercial licences. Do not use the upstream password-based
+insecure-`wget` installer without security review.
+
 ## Milestone M1 — modular Avatar Studio workspaces
 
 New top-level tabs preserve the working Photo Lab and add independent **Reconstruction**, **Motion**, **Export**, and **Developer Guide** workspaces.
