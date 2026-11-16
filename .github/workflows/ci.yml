@@ -16,6 +16,10 @@ jobs:
       - name: Build pure-ESM geometry package
         run: node scripts/build-face-surface-package.mjs
       - run: node --test tests/*.test.mjs
+      - name: Offline Python MICA bridge contract tests (no weights, no GPU)
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Validate research runner syntax
+        run: python3 -m py_compile tools/mica/run_mica.py
       - name: Pack independent geometry module (private, not published)
         run: mkdir -p package-artifacts && npm pack ./packages/face-surface --pack-destination package-artifacts --ignore-scripts
       - uses: actions/upload-artifact@v4
@@ -24,4 +28,4 @@ jobs:
           name: photo3d-face-surface-package
           path: package-artifacts/*.tgz
           if-no-files-found: error
-      - run: node --check src/app.js && node --check src/contracts.js && node --check src/models/mediapipe.js && node --check src/visualization.js && node --check src/geometry/face-topology.js && node --check src/geometry/face-triangles.js && node --check src/geometry/surface-audit.js && node --check src/renderers/three-textured.js && node --check src/visualization/face-reference.js && node --check src/studio/studio.js && node --check src/studio/model-catalog.js && node --check src/studio/capture.js && node --check src/studio/reconstruction-baseline.js && node --check src/studio/studio-reconstruction.js
+      - run: node --check src/app.js && node --check src/contracts.js && node --check src/models/mediapipe.js && node --check src/visualization.js && node --check src/geometry/face-topology.js && node --check src/geometry/face-triangles.js && node --check src/geometry/surface-audit.js && node --check src/renderers/three-textured.js && node --check src/visualization/face-reference.js && node --check src/studio/studio.js && node --check src/studio/model-catalog.js && node --check src/studio/capture.js && node --check src/studio/reconstruction-baseline.js && node --check src/studio/studio-reconstruction.js && node --check src/studio/research-mesh-contract.js && node --check src/studio/research-head-viewer.js
