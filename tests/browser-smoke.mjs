@@ -113,7 +113,7 @@ test("MediaPipe analyzes a real portrait and both panels share source output", {
       }
       await page.locator("#mica-obj-file").setInputFiles({
         name:"mesh.obj",mimeType:"text/plain",
-        buffer:Buffer.from(syntheticObj.join("\\n")+"\\n")
+        buffer:Buffer.from(syntheticObj.join("\n")+"\n")
       });
       await page.waitForFunction(()=>{
         const s=window.photo3dStudioStatus?.().researchImport?.state;
