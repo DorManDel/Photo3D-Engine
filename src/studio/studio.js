@@ -26,8 +26,9 @@ function activateView(view){
 }
 function navigate(view,{focus=false}={}){
   if(!validViews.has(view))return;
+  // Update DOM synchronously; hashchange runs later and must not flash the old tab.
+  activateView(view);
   if(location.hash!=="#"+view)location.hash=view;
-  else activateView(view);
   if(focus)tabs.find(t=>t.dataset.viewTarget===view)?.focus();
 }
 tabs.forEach((tab,index)=>{
