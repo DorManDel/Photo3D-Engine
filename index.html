@@ -7,6 +7,9 @@
   <meta name="description" content="Photo3D Engine: modular portrait lab, reconstruction research studio, motion roadmap and developer guide.">
   <title>Photo3D Lab • Textured 2.5D Face</title>
   <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}
+  </script>
   <script type="module" src="./src/app.js"></script>
   <script type="module" src="./src/studio/studio.js"></script>
   <link rel="stylesheet" href="./src/studio/studio.css">
@@ -67,7 +70,7 @@
     </div>
     <section class="disclosure" aria-label="Technical boundaries">
       <strong>What's real?</strong> Detected landmarks, official triangles, the original photo texture and Three.js rendering. <strong>What's not here?</strong> AI-estimated depth, hair/neck segmentation, hidden head surfaces or realistic blinking.
-      <p>Model assets are downloaded on first analysis. Device speed, browser support and network access affect success. We never quietly substitute a simulated result.</p>
+      <p>Model assets are downloaded on first analysis. Device speed, browser support and network access affect success. The Reconstruction Studio can now build a real face-only GLB; this is not a full-head or rigged avatar. We never quietly substitute a simulated result.</p>
     </section>
     </section>
 
@@ -75,7 +78,7 @@
       <header class="studio-heading">
         <p class="eyebrow">MILESTONE 01 / INPUT &amp; RECONSTRUCTION RESEARCH</p>
         <h2>Reconstruction Studio</h2>
-        <p>Prepare one or more reference photos, compare reconstruction approaches, and export a privacy-safe capture plan. <strong>No head reconstruction runs in this tab yet.</strong></p>
+        <p>Prepare reference photos, run a real browser-based 2.5D face reconstruction baseline, inspect the result and export a textured GLB. <strong>Full-head MICA/DECA reconstruction remains separate and is not running here.</strong></p>
       </header>
       <div class="studio-grid">
         <section class="studio-card" aria-labelledby="capture-heading">
@@ -109,6 +112,30 @@
           <a class="studio-inline-link" href="https://github.com/DorManDel/Photo3D-Engine/blob/main/docs/PROVIDER_ROADMAP.md" target="_blank" rel="noopener noreferrer">Provider architecture ↗</a>
         </section>
       </div>
+      <section class="studio-card live-baseline" aria-labelledby="baseline-title">
+        <div class="studio-card-top"><div><p class="eyebrow">M1B / WORKING RECONSTRUCTION BASELINE</p><h3 id="baseline-title">Run a real photo → 3D experiment</h3></div><span class="status-chip state-ready">ON-DEVICE MEDIAPIPE</span></div>
+        <p class="muted">This button <strong>actually runs face inference</strong> on the front photo, constructs indexed 3D triangles, maps the original pixels, displays the result, and exports a textured GLB. It reconstructs <strong>only the visible 2.5D face surface</strong>, not a full head. Extra reference photos are saved for future experiments but are not combined yet.</p>
+        <div class="studio-actions"><button type="button" id="run-baseline" disabled>▶ Generate 2.5D Face Mesh</button><button type="button" class="secondary" id="download-baseline-glb" disabled>↓ Export actual mesh (.glb)</button><button type="button" class="secondary" id="reset-baseline">Reset result</button></div>
+        <div class="live-status" id="baseline-status" role="status" aria-live="polite">Choose a Front photograph to enable real inference.</div>
+        <div class="pipeline-progress" aria-label="Actual execution steps">
+          <div data-pipeline-step="input"><span>01</span><strong>Input</strong><small>Local front image</small></div>
+          <div data-pipeline-step="model"><span>02</span><strong>Inference</strong><small>MediaPipe</small></div>
+          <div data-pipeline-step="mesh"><span>03</span><strong>Geometry</strong><small>Real triangles + UV</small></div>
+          <div data-pipeline-step="render"><span>04</span><strong>Preview</strong><small>Interactive WebGL</small></div>
+          <div data-pipeline-step="export"><span>05</span><strong>Export</strong><small>Textured GLB</small></div>
+        </div>
+        <div class="baseline-layout" id="baseline-result" hidden>
+          <div class="baseline-viewer-wrap">
+            <div class="baseline-viewer" id="baseline-viewer" aria-label="Real 2.5D facial mesh generated from front photo"></div>
+            <div class="baseline-views"><label>Yaw <input id="baseline-yaw" type="range" min="-65" max="65" value="0"></label><label>Pitch <input id="baseline-pitch" type="range" min="-40" max="40" value="0"></label><label>Zoom <input id="baseline-zoom" type="range" min="0.6" max="2.2" step=".1" value="1"></label><label class="baseline-check"><input id="baseline-wire" type="checkbox"> Show wireframe</label></div>
+          </div>
+          <div class="baseline-report">
+            <h4>Actual model report</h4>
+            <div id="baseline-metrics" class="metrics-list"></div>
+            <p class="fine-print">Source: one front photo. Relative Z is not metric depth. GLB exports geometry and photo texture; it is not watertight, not a full head, and contains no skeleton, eyelids, clothes or animations. In Blender you can inspect and rotate it, but you cannot animate a person yet.</p>
+          </div>
+        </div>
+      </section>
       <section class="studio-card studio-process" aria-label="Reconstruction development pipeline">
         <h3>03 · How a real reconstruction will work</h3>
         <div class="process-steps">
@@ -118,7 +145,7 @@
           <div><b>04</b><strong>Normalize</strong><span>Mesh, parameters, scale, confidence</span></div>
           <div><b>05</b><strong>Inspect</strong><span>0° / 30° / 60° comparisons</span></div>
         </div>
-        <p class="fine-print">The first two sections are available for capture planning; preprocessing, reconstruction, normalization and comparison are implementation milestones. We won't fabricate results.</p>
+        <p class="fine-print">The runnable MediaPipe baseline now covers local inference, validated 2.5D geometry, WebGL preview and textured GLB export. Preprocessing for MICA/DECA, full-head reconstruction, multi-view fusion, standardized rigging and benchmark comparisons are still separate milestones.</p>
       </section>
     </section>
 
