@@ -6,13 +6,13 @@ A **modular, local-first portrait-analysis toolkit**. The browser lab combines *
 
 New top-level tabs preserve the working Photo Lab and add independent **Reconstruction**, **Motion**, **Export**, and **Developer Guide** workspaces.
 
-- **Reconstruction Studio (M1a):** prepare up to four local reference photos, inspect their dimensions, select a research candidate (MICA, DECA, MediaPipe baseline or SAM 3D Body), and export a metadata-only capture plan JSON. This is **not** MICA/DECA inference, a photo upload, a generated mesh, or a working full-body model.
+- **Reconstruction Studio (M1b):** prepare up to four local photos and run a genuine **single-front-image MediaPipe 2.5D face inference**. It produces official indexed triangles with original UV-texture, renders a new interactive Three.js view and exports a real binary **.glb** (mesh + source photo texture). Side photos are NOT fused, no complete head/eye fill/skeleton exists, and MICA/DECA are still NOT installed. Metadata-only capture-plan JSON also remains available.
 - **Motion Lab:** explicit blueprint for opt-in camera tracking and rig retargeting; no webcam access is requested.
-- **Export Studio:** realistic readiness matrix. Current exports are landmarks JSON and mesh snapshot PNG, not GLB/FBX/VRM.
+- **Export Studio:** real capability matrix. Exports: landmarks JSON, snapshot PNG, and **face-only textured GLB** from Reconstruction baseline. No FBX/VRM or rigged full person.
 - **Developer Guide:** simple programming explanations of landmarks, UVs, model adapters, rigging and file formats.
 - Independent static modules: `src/studio/studio.js`, `src/studio/capture.js`, `src/studio/model-catalog.js`; the original face engine is unchanged.
 
-Read [the detailed developer and milestone plan](docs/RECONSTRUCTION_STUDIO.md). Actual MICA/DECA inference requires an isolated reviewed GPU/Python adapter, model-asset access and **non-commercial license checks**. Do not claim the research candidates run in this browser.
+Read [the detailed developer and milestone plan](docs/RECONSTRUCTION_STUDIO.md). The GLB uses Three.js's official GLTFExporter add-on (lazily imported from the pinned CDN, using an import map), not a custom invented file format. Actual MICA/DECA inference requires an isolated reviewed GPU/Python adapter, model-asset access and **non-commercial license checks**. Do not claim the research candidates run in this browser.
 
 ## Run without npm or a personal server
 
