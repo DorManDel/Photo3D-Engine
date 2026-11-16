@@ -1,0 +1,19 @@
+# Local development diagnostics, never commit photo/model research data
+/test-results/
+/photo3d-private-output/
+/photo3d-output/
+/private/
+/mica-assets/
+**/__pycache__/
+*.py[cod]
+*.npy
+*.pkl
+*.pth
+*.pt
+*.ckpt
+*.tar
+/data/FLAME2020/
+/data/pretrained/
+.env
+.env.*
+!.env.example
