@@ -1,6 +1,7 @@
 import { PROVIDERS, getProvider } from "./model-catalog.js";
 import { CAPTURE_SLOTS, validateCaptureFile, evaluateCapture, buildCapturePlan } from "./capture.js";
 import { setupReconstructionBaseline } from "./studio-reconstruction.js";
+import { setupResearchMeshImporter } from "./research-head-viewer.js";
 
 const $=id=>document.getElementById(id);
 const tabs=[...document.querySelectorAll("[data-view-target]")];
@@ -13,6 +14,7 @@ const reconstruction=setupReconstructionBaseline({
   getFrontImageUrl:()=>urls.front||null,
   getReferenceCount:()=>evaluateCapture(captures).imageCount
 });
+const researchImporter=setupResearchMeshImporter();
 
 function viewFromHash(){
   const view=location.hash.replace(/^#\/?/,"").trim();
@@ -167,5 +169,6 @@ window.photo3dStudioStatus=()=>({
   activeView,selectedProvider,
   imageSlots:CAPTURE_SLOTS.filter(slot=>Boolean(captures[slot.id])).map(slot=>slot.id),
   inferenceExecuted:reconstruction.status().ready,
-  baseline:reconstruction.status()
+  baseline:reconstruction.status(),
+  researchImport:researchImporter.status()
 });
